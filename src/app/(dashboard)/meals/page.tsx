@@ -1,9 +1,36 @@
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { startOfWeek } from "date-fns";
 import { UtensilsCrossed } from "lucide-react";
+import { MealPlanView } from "@/components/meals/MealPlanView";
+import { getActiveCareCircle } from "@/lib/queries/dashboard";
 
-export default function MealsPage() {
+export default async function MealsPage() {
+  const session = await auth();
+  const membership = session?.user?.id
+    ? await getActiveCareCircle(session.user.id)
+    : null;
+
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
+
+  const mealPlan = membership?.careCircleId
+    ? await prisma.mealPlan.findFirst({
+        where: {
+          careCircleId: membership.careCircleId,
+          weekStartDate: weekStart,
+          status: { in: ["ACTIVE", "DRAFT"] },
+        },
+        include: {
+          meals: {
+            include: {
+              provider: { select: { id: true, name: true, image: true } },
+            },
+            orderBy: [{ date: "asc" }, { mealType: "asc" }],
+          },
+        },
+      })
+    : null;
+
   return (
     <div className="py-6">
       <div className="mb-6">
@@ -13,22 +40,17 @@ export default function MealsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">This Week</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <UtensilsCrossed className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-muted-foreground">
-              No meal plan yet for this week.
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Let&apos;s get some nourishing meals planned!
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {mealPlan && mealPlan.meals.length > 0 ? (
+        <MealPlanView meals={mealPlan.meals} weekStart={weekStart} />
+      ) : (
+        <div className="text-center py-16">
+          <UtensilsCrossed className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
+          <p className="text-muted-foreground font-medium">No meals planned this week yet.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Ask the circle coordinator to add meals, or use the chat assistant.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,35 +1,87 @@
 import { auth } from "@/lib/auth";
+import { format } from "date-fns";
 import { WhoIsHere } from "@/components/dashboard/WhoIsHere";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TodayOverview } from "@/components/dashboard/TodayOverview";
+import { CheckInButton } from "@/components/dashboard/CheckInButton";
+import {
+  getActiveCareCircle,
+  getCurrentShift,
+  getNextShift,
+  getTodayMealCounts,
+  getPendingRequestCount,
+  getTodayAppointmentCount,
+  getUserShiftForNow,
+} from "@/lib/queries/dashboard";
 
 export default async function DashboardPage() {
   const session = await auth();
+  const userId = session?.user?.id;
+
+  const membership = userId ? await getActiveCareCircle(userId) : null;
+  const circleId = membership?.careCircleId;
+
+  const [currentShift, nextShift, mealCounts, pendingRequests, appointmentCount, myShift] =
+    circleId && userId
+      ? await Promise.all([
+          getCurrentShift(circleId),
+          getNextShift(circleId),
+          getTodayMealCounts(circleId),
+          getPendingRequestCount(circleId),
+          getTodayAppointmentCount(circleId),
+          getUserShiftForNow(userId, circleId),
+        ])
+      : [null, null, { planned: 0, delivered: 0 }, 0, 0, null];
+
+  const currentCaregiver = currentShift?.primaryCaregiver
+    ? {
+        name: currentShift.primaryCaregiver.name ?? "Caregiver",
+        image: currentShift.primaryCaregiver.image,
+        phone: currentShift.primaryCaregiver.phone,
+        shiftEnd: format(currentShift.endTime, "h:mm a"),
+      }
+    : null;
+
+  const nextCaregiver = nextShift?.primaryCaregiver
+    ? {
+        name: nextShift.primaryCaregiver.name ?? "Caregiver",
+        image: nextShift.primaryCaregiver.image,
+        phone: nextShift.primaryCaregiver.phone,
+        shiftEnd: format(nextShift.endTime, "h:mm a"),
+      }
+    : null;
+
+  const firstName = session?.user?.name?.split(" ")[0] ?? "";
+  const alreadyCheckedIn = (myShift?.checkIns?.length ?? 0) > 0;
 
   return (
     <div className="space-y-6 py-6">
-      {/* Greeting */}
       <div>
         <h2 className="text-2xl font-bold">
-          Hi{session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}
+          Hi{firstName ? `, ${firstName}` : ""}
         </h2>
         <p className="text-muted-foreground text-sm mt-1">
           Here&apos;s what&apos;s happening today
         </p>
       </div>
 
-      {/* Who's here now */}
-      <WhoIsHere currentCaregiver={null} nextCaregiver={null} />
+      {myShift && (
+        <CheckInButton
+          shiftId={myShift.id}
+          shiftEnd={format(myShift.endTime, "h:mm a")}
+          alreadyCheckedIn={alreadyCheckedIn}
+        />
+      )}
 
-      {/* Quick actions */}
+      <WhoIsHere currentCaregiver={currentCaregiver} nextCaregiver={nextCaregiver} />
+
       <QuickActions />
 
-      {/* Today's overview */}
       <TodayOverview
-        mealsPlanned={0}
-        mealsDelivered={0}
-        appointmentsCount={0}
-        pendingRequests={0}
+        mealsPlanned={mealCounts.planned}
+        mealsDelivered={mealCounts.delivered}
+        appointmentsCount={appointmentCount}
+        pendingRequests={pendingRequests}
       />
     </div>
   );

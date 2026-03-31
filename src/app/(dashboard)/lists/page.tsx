@@ -1,9 +1,30 @@
-"use client";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { ShoppingListView } from "@/components/shopping/ShoppingListView";
+import { getActiveCareCircle } from "@/lib/queries/dashboard";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCart } from "lucide-react";
+export default async function ListsPage() {
+  const session = await auth();
+  const membership = session?.user?.id
+    ? await getActiveCareCircle(session.user.id)
+    : null;
 
-export default function ListsPage() {
+  const lists = membership?.careCircleId
+    ? await prisma.shoppingList.findMany({
+        where: { careCircleId: membership.careCircleId, status: "ACTIVE" },
+        include: {
+          items: {
+            include: {
+              assignedTo: { select: { id: true, name: true, image: true } },
+            },
+            orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
+          },
+          createdBy: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
+
   return (
     <div className="py-6">
       <div className="mb-6">
@@ -13,20 +34,11 @@ export default function ListsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Active Lists</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <ShoppingCart className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-muted-foreground">No lists yet.</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Add items anyone in the care circle can pick up!
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <ShoppingListView
+        lists={lists}
+        careCircleId={membership?.careCircleId ?? ""}
+        currentUserId={session?.user?.id ?? ""}
+      />
     </div>
   );
 }
