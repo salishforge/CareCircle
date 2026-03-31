@@ -1,0 +1,712 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  PATIENT
+  PRIMARY_CAREGIVER
+  CAREGIVER
+  MEAL_PROVIDER
+  ADMIN
+  DISPLAY
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  FACEBOOK
+  AMAZON
+}
+
+enum ShiftStatus {
+  OPEN
+  CLAIMED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+}
+
+enum SwapStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
+enum CheckInMethod {
+  APP_BUTTON
+  SMS_REPLY
+  AUTO_CALL
+}
+
+enum CheckInStatus {
+  ON_TIME
+  LATE
+  MISSED
+}
+
+enum EscalationLevel {
+  LEVEL_1
+  LEVEL_2
+  LEVEL_3
+}
+
+enum EscalationResolution {
+  CAREGIVER_ARRIVED
+  ALTERNATE_DISPATCHED
+  EMERGENCY_CONTACTED
+}
+
+enum AppointmentType {
+  MEDICAL
+  THERAPY
+  OTHER
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum MealSource {
+  HOMEMADE
+  CATERED
+  MEAL_SERVICE
+  RESTAURANT
+}
+
+enum MealStatus {
+  PLANNED
+  CONFIRMED
+  DELIVERED
+  SKIPPED
+}
+
+enum MealPlanStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum MealSignupStatus {
+  SIGNED_UP
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+enum TreatmentType {
+  CHEMO
+  RADIATION
+  IMMUNOTHERAPY
+  SURGERY
+  COMBINATION
+}
+
+enum TexturePreference {
+  NORMAL
+  SOFT
+  PUREED
+  LIQUID
+}
+
+enum ShoppingCategory {
+  FOOD
+  MEDICAL
+  HOME
+  PERSONAL
+}
+
+enum ListStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum ItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ItemStatus {
+  NEEDED
+  CLAIMED
+  PURCHASED
+  DELIVERED
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+enum RequestType {
+  MEAL
+  SCHEDULE
+  TRANSPORT
+  SUPPLY
+  OTHER
+}
+
+enum RequestPriority {
+  LOW
+  NORMAL
+  URGENT
+}
+
+enum RequestStatus {
+  OPEN
+  IN_PROGRESS
+  FULFILLED
+  CANCELLED
+}
+
+enum EmergencyCategory {
+  MEDICAL
+  PERSONAL
+  LOGISTICAL
+}
+
+enum NotificationType {
+  SHIFT_REMINDER
+  SHIFT_CONFIRMATION
+  CHECK_IN_NUDGE
+  ESCALATION
+  MEAL_REMINDER
+  MEDICATION_REMINDER
+  PATIENT_REQUEST
+  ENCOURAGEMENT
+  SYSTEM
+}
+
+// ─── Auth (NextAuth) ─────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Users & Care Circles ────────────────────────────────────────────────────
+
+model User {
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  emailVerified           DateTime?
+  name                    String?
+  phone                   String?
+  image                   String?
+  passwordHash            String?
+  role                    UserRole  @default(CAREGIVER)
+  authProvider            AuthProvider @default(LOCAL)
+  notificationPreferences Json      @default("{\"email\":true,\"sms\":true,\"push\":true,\"quietHoursStart\":null,\"quietHoursEnd\":null}")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  // Care circle relations
+  ownedCircles      CareCircle[]        @relation("CircleOwner")
+  circleMemberships CareCircleMember[]
+  emergencyContacts EmergencyContact[]
+
+  // Care shift relations
+  primaryShifts   CareShift[] @relation("PrimaryCaregiver")
+  alternateShifts CareShift[] @relation("AlternateCaregiver")
+  checkIns        CheckIn[]
+  swapRequests    ShiftSwapRequest[] @relation("SwapRequester")
+  resolvedAlerts  AlertEscalation[] @relation("AlertResolver")
+
+  // Appointment relations
+  transportVolunteer Appointment[] @relation("TransportVolunteer")
+
+  // Meal relations
+  createdMealPlans MealPlan[]          @relation("MealPlanCreator")
+  providedMeals    Meal[]              @relation("MealProvider")
+  mealSignups      MealProviderSignup[]
+  nutritionProfile PatientNutritionProfile?
+
+  // Shopping relations
+  createdLists  ShoppingList[]
+  claimedItems  ShoppingItem[] @relation("ItemAssignee")
+
+  // Chat & requests
+  chatMessages    ChatMessage[]
+  patientRequests PatientRequest[] @relation("PatientRequester")
+  assignedRequests PatientRequest[] @relation("RequestAssignee")
+
+  // Wellness
+  moodEntries     MoodEntry[]
+  medicationLogs  MedicationLog[]
+
+  // Gratitude
+  sentMessages     GratitudeMessage[] @relation("GratitudeSender")
+
+  // Documents
+  uploadedDocuments Document[]
+
+  // Notifications
+  notifications Notification[]
+
+  // Invites
+  createdInvites Invite[]
+}
+
+model EmergencyContact {
+  id           String            @id @default(cuid())
+  userId       String
+  name         String
+  phone        String
+  email        String?
+  relationship String
+  notes        String?
+  priority     Int               @default(1) // 1-3
+  category     EmergencyCategory @default(PERSONAL)
+  createdAt    DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CareCircle {
+  id        String   @id @default(cuid())
+  name      String
+  patientId String
+  timezone  String   @default("America/Los_Angeles")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient User               @relation("CircleOwner", fields: [patientId], references: [id])
+  members CareCircleMember[]
+
+  // Related data
+  shifts       CareShift[]
+  appointments Appointment[]
+  mealPlans    MealPlan[]
+  mealSignups  MealProviderSignup[]
+  shoppingLists ShoppingList[]
+  chatMessages  ChatMessage[]
+  requests      PatientRequest[]
+  gratitudeMessages GratitudeMessage[]
+  documents     Document[]
+  invites       Invite[]
+}
+
+model CareCircleMember {
+  id           String   @id @default(cuid())
+  careCircleId String
+  userId       String
+  role         UserRole @default(CAREGIVER)
+  joinedAt     DateTime @default(now())
+  isActive     Boolean  @default(true)
+
+  careCircle CareCircle @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([careCircleId, userId])
+}
+
+model Invite {
+  id           String   @id @default(cuid())
+  careCircleId String
+  code         String   @unique
+  role         UserRole?
+  createdById  String
+  expiresAt    DateTime
+  usedAt       DateTime?
+  usedById     String?
+  createdAt    DateTime @default(now())
+
+  careCircle CareCircle @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  createdBy  User       @relation(fields: [createdById], references: [id])
+}
+
+// ─── Care Calendar & Scheduling ──────────────────────────────────────────────
+
+model CareShift {
+  id                   String      @id @default(cuid())
+  careCircleId         String
+  date                 DateTime    @db.Date
+  startTime            DateTime
+  endTime              DateTime
+  primaryCaregiverId   String?
+  alternateCaregiverId String?
+  status               ShiftStatus @default(OPEN)
+  checkInTime          DateTime?
+  checkInMethod        CheckInMethod?
+  isRecurring          Boolean     @default(false)
+  recurringPattern     String?     // cron-like pattern for recurring shifts
+  notes                String?     @db.Text
+  handoffNotes         String?     @db.Text
+  handoffMood          Int?        // 1-5 emoji scale
+  handoffMealsConsumed String?     @db.Text
+  handoffMedsGiven     String?     @db.Text
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  careCircle       CareCircle         @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  primaryCaregiver User?              @relation("PrimaryCaregiver", fields: [primaryCaregiverId], references: [id])
+  alternateCaregiver User?            @relation("AlternateCaregiver", fields: [alternateCaregiverId], references: [id])
+  checkIns         CheckIn[]
+  swapRequests     ShiftSwapRequest[]
+  escalations      AlertEscalation[]
+
+  @@index([careCircleId, date])
+  @@index([primaryCaregiverId])
+}
+
+model ShiftSwapRequest {
+  id              String     @id @default(cuid())
+  originalShiftId String
+  requesterId     String
+  reason          String?    @db.Text
+  status          SwapStatus @default(PENDING)
+  newCaregiverId  String?
+  createdAt       DateTime   @default(now())
+
+  originalShift CareShift @relation(fields: [originalShiftId], references: [id], onDelete: Cascade)
+  requester     User      @relation("SwapRequester", fields: [requesterId], references: [id])
+}
+
+model Appointment {
+  id                       String          @id @default(cuid())
+  careCircleId             String
+  title                    String
+  description              String?         @db.Text
+  location                 String?
+  dateTime                 DateTime
+  duration                 Int             // minutes
+  type                     AppointmentType @default(MEDICAL)
+  transportationNeeded     Boolean         @default(false)
+  transportationVolunteerId String?
+  remindersSent            Boolean         @default(false)
+  notes                    String?         @db.Text
+  createdAt                DateTime        @default(now())
+
+  careCircle              CareCircle @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  transportationVolunteer User?      @relation("TransportVolunteer", fields: [transportationVolunteerId], references: [id])
+}
+
+// ─── Check-In System ─────────────────────────────────────────────────────────
+
+model CheckIn {
+  id          String        @id @default(cuid())
+  shiftId     String
+  caregiverId String
+  method      CheckInMethod
+  timestamp   DateTime      @default(now())
+  latitude    Float?
+  longitude   Float?
+  status      CheckInStatus @default(ON_TIME)
+  notes       String?       @db.Text
+
+  shift    CareShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  caregiver User     @relation(fields: [caregiverId], references: [id])
+}
+
+model AlertEscalation {
+  id           String               @id @default(cuid())
+  shiftId      String
+  level        EscalationLevel
+  triggeredAt  DateTime             @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+  resolution   EscalationResolution?
+
+  shift      CareShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  resolvedBy User?     @relation("AlertResolver", fields: [resolvedById], references: [id])
+}
+
+// ─── Meal Planning ───────────────────────────────────────────────────────────
+
+model MealPlan {
+  id            String         @id @default(cuid())
+  careCircleId  String
+  weekStartDate DateTime       @db.Date
+  createdById   String
+  status        MealPlanStatus @default(DRAFT)
+  notes         String?        @db.Text
+  createdAt     DateTime       @default(now())
+
+  careCircle CareCircle @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  createdBy  User       @relation("MealPlanCreator", fields: [createdById], references: [id])
+  meals      Meal[]
+}
+
+model Meal {
+  id              String     @id @default(cuid())
+  mealPlanId      String
+  date            DateTime   @db.Date
+  mealType        MealType
+  title           String
+  description     String?    @db.Text
+  calories        Int?
+  proteinGrams    Int?
+  specialNotes    String?    @db.Text
+  source          MealSource @default(HOMEMADE)
+  providerId      String?
+  status          MealStatus @default(PLANNED)
+  patientRating   Int?       // 1-5
+  patientFeedback String?    @db.Text
+  allergenFlags   Json?      // array of flagged allergens
+  interactionFlags Json?     // array of drug interaction warnings
+  createdAt       DateTime   @default(now())
+
+  mealPlan MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  provider User?    @relation("MealProvider", fields: [providerId], references: [id])
+
+  @@index([mealPlanId, date])
+}
+
+model PatientNutritionProfile {
+  id                  String          @id @default(cuid())
+  patientId           String          @unique
+  allergies           Json            @default("[]")
+  intolerances        Json            @default("[]")
+  dietaryRestrictions Json            @default("[]")
+  medications         Json            @default("[]") // [{name, timing, foodInteractions}]
+  treatmentType       TreatmentType?
+  currentSymptoms     Json            @default("[]")
+  calorieTarget       Int             @default(2000)
+  proteinTarget       Int             @default(75)
+  hydrationTarget     Int             @default(8) // cups
+  preferredFoods      Json            @default("[]")
+  dislikedFoods       Json            @default("[]")
+  texturePreference   TexturePreference @default(NORMAL)
+  oncologistNotes     String?         @db.Text
+  lastUpdated         DateTime        @updatedAt
+
+  patient User @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model MealProviderSignup {
+  id                  String           @id @default(cuid())
+  careCircleId        String
+  userId              String
+  date                DateTime         @db.Date
+  mealType            MealType
+  plannedMeal         String?          @db.Text
+  deliveryTime        DateTime?
+  specialInstructions String?          @db.Text
+  status              MealSignupStatus @default(SIGNED_UP)
+  createdAt           DateTime         @default(now())
+
+  careCircle CareCircle @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@index([careCircleId, date])
+}
+
+// ─── Shopping & Supplies ─────────────────────────────────────────────────────
+
+model ShoppingList {
+  id           String           @id @default(cuid())
+  careCircleId String
+  title        String
+  category     ShoppingCategory @default(FOOD)
+  createdById  String
+  status       ListStatus       @default(ACTIVE)
+  createdAt    DateTime         @default(now())
+
+  careCircle CareCircle    @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  createdBy  User          @relation(fields: [createdById], references: [id])
+  items      ShoppingItem[]
+}
+
+model ShoppingItem {
+  id            String       @id @default(cuid())
+  listId        String
+  name          String
+  quantity      String?
+  unit          String?
+  notes         String?
+  priority      ItemPriority @default(MEDIUM)
+  assignedToId  String?
+  status        ItemStatus   @default(NEEDED)
+  estimatedCost Float?
+  createdAt     DateTime     @default(now())
+
+  list       ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignedTo User?        @relation("ItemAssignee", fields: [assignedToId], references: [id])
+}
+
+// ─── AI Chat & Requests ──────────────────────────────────────────────────────
+
+model ChatMessage {
+  id           String   @id @default(cuid())
+  careCircleId String
+  userId       String
+  role         ChatRole
+  content      String   @db.Text
+  metadata     Json?    // structured actions taken
+  createdAt    DateTime @default(now())
+
+  careCircle CareCircle @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@index([careCircleId, createdAt])
+}
+
+model PatientRequest {
+  id           String         @id @default(cuid())
+  careCircleId String
+  patientId    String
+  type         RequestType
+  description  String         @db.Text
+  priority     RequestPriority @default(NORMAL)
+  status       RequestStatus  @default(OPEN)
+  assignedToId String?
+  fulfilledAt  DateTime?
+  notes        String?        @db.Text
+  createdAt    DateTime       @default(now())
+
+  careCircle CareCircle @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  patient    User       @relation("PatientRequester", fields: [patientId], references: [id])
+  assignedTo User?      @relation("RequestAssignee", fields: [assignedToId], references: [id])
+
+  @@index([careCircleId, status])
+}
+
+// ─── Wellness & Medication ───────────────────────────────────────────────────
+
+model MoodEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  date        DateTime @db.Date
+  mood        Int      // 1-5
+  energyLevel Int?     // 1-5
+  painLevel   Int?     // 0-10
+  appetite    Int?     // 1-5
+  sleepQuality Int?    // 1-5
+  symptoms    Json     @default("[]")
+  notes       String?  @db.Text
+  isPrivate   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+model MedicationEntry {
+  id              String   @id @default(cuid())
+  careCircleId    String?
+  patientId       String
+  name            String
+  dosage          String?
+  frequency       String?  // "twice daily", "every 8 hours", etc.
+  timing          String?  // "with food", "30 min before meals", etc.
+  foodInteractions Json    @default("[]")
+  notes           String?  @db.Text
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  @@index([patientId])
+}
+
+model MedicationLog {
+  id               String   @id @default(cuid())
+  userId           String
+  medicationName   String
+  scheduledTime    DateTime?
+  takenAt          DateTime @default(now())
+  skipped          Boolean  @default(false)
+  notes            String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, takenAt])
+}
+
+// ─── Gratitude & Encouragement ───────────────────────────────────────────────
+
+model GratitudeMessage {
+  id           String   @id @default(cuid())
+  careCircleId String
+  senderId     String
+  content      String   @db.Text
+  imageUrl     String?
+  isDelivered  Boolean  @default(false)
+  deliveredAt  DateTime?
+  createdAt    DateTime @default(now())
+
+  careCircle CareCircle @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  sender     User       @relation("GratitudeSender", fields: [senderId], references: [id])
+}
+
+// ─── Document Vault ──────────────────────────────────────────────────────────
+
+model Document {
+  id           String   @id @default(cuid())
+  careCircleId String
+  uploadedById String
+  title        String
+  description  String?
+  fileUrl      String
+  fileType     String
+  fileSize     Int
+  category     String   @default("general") // insurance, medication-list, advance-directive, etc.
+  createdAt    DateTime @default(now())
+
+  careCircle CareCircle @relation(fields: [careCircleId], references: [id], onDelete: Cascade)
+  uploadedBy User       @relation(fields: [uploadedById], references: [id])
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String           @db.Text
+  data      Json?            // additional structured data
+  read      Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+}
