@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NotificationType, ShiftStatus } from "@/generated/prisma/client";
 import { sendPushToUser } from "@/lib/web-push";
+import { sendShiftReminderEmail, sendMedicationReminderEmail } from "@/lib/email";
+import { getUserPrefs, shouldNotifyChannel } from "@/lib/notification-utils";
 
 /**
  * Cron job: runs every 5 minutes (alongside check-in-monitor)
@@ -62,11 +64,31 @@ export async function POST(request: Request) {
         },
       });
 
-      await sendPushToUser(shift.primaryCaregiverId, {
-        title,
-        body,
-        data: { type: "SHIFT_REMINDER", shiftId: shift.id },
-      });
+      const prefs = await getUserPrefs(shift.primaryCaregiverId);
+
+      if (shouldNotifyChannel(prefs, "push", NotificationType.SHIFT_REMINDER)) {
+        await sendPushToUser(shift.primaryCaregiverId, {
+          title,
+          body,
+          data: { type: "SHIFT_REMINDER", shiftId: shift.id },
+        });
+      }
+
+      if (shouldNotifyChannel(prefs, "email", NotificationType.SHIFT_REMINDER)) {
+        const user = await prisma.user.findUnique({
+          where: { id: shift.primaryCaregiverId },
+          select: { email: true, name: true },
+        });
+        if (user?.email) {
+          await sendShiftReminderEmail({
+            recipientEmail: user.email,
+            recipientName: user.name ?? "Caregiver",
+            shiftStart: shift.startTime,
+            shiftEnd: shift.endTime,
+            circleName: shift.careCircle.name,
+          });
+        }
+      }
     })
   );
 
@@ -117,11 +139,29 @@ export async function POST(request: Request) {
           },
         });
 
-        await sendPushToUser(patientId, {
-          title,
-          body,
-          data: { type: "MEDICATION_REMINDER" },
-        });
+        const prefs = await getUserPrefs(patientId);
+
+        if (shouldNotifyChannel(prefs, "push", NotificationType.MEDICATION_REMINDER)) {
+          await sendPushToUser(patientId, {
+            title,
+            body,
+            data: { type: "MEDICATION_REMINDER" },
+          });
+        }
+
+        if (shouldNotifyChannel(prefs, "email", NotificationType.MEDICATION_REMINDER)) {
+          const user = await prisma.user.findUnique({
+            where: { id: patientId },
+            select: { email: true, name: true },
+          });
+          if (user?.email) {
+            await sendMedicationReminderEmail({
+              recipientEmail: user.email,
+              recipientName: user.name ?? "Patient",
+              medications: medNames,
+            });
+          }
+        }
       })
     );
   }

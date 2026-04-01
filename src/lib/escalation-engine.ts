@@ -5,6 +5,8 @@ import {
   NotificationType,
 } from "@/generated/prisma/client";
 import { sendSms, sendEscalationAlert } from "@/lib/twilio";
+import { sendEscalationEmail } from "@/lib/email";
+import { shouldNotifyChannel, getUserPrefs } from "@/lib/notification-utils";
 
 /**
  * Main escalation check. Call every 5 minutes via cron.
@@ -111,25 +113,43 @@ async function createEscalation(
     }
   }
 
-  // Persist in-app notifications and send SMS
+  // Persist in-app notifications and send SMS + email
   await Promise.allSettled(
     notifications.map(async (n) => {
+      const prefs = await getUserPrefs(n.user.id);
+      const levelNum = parseInt(level.split("_")[1]);
+
       await prisma.notification.create({
         data: {
           userId: n.user.id,
           type: n.notifType,
-          title: `Care circle alert — Level ${level.split("_")[1]}`,
+          title: `Care circle alert — Level ${levelNum}`,
           body: n.message,
         },
       });
 
-      if (n.user.phone) {
+      if (n.user.phone && shouldNotifyChannel(prefs, "sms", n.notifType)) {
         await sendEscalationAlert({
           recipientName: n.user.name ?? "Caregiver",
           recipientPhone: n.user.phone,
           missedCaregiverName: caregiverName,
           shiftStart: shift.startTime,
-          level: parseInt(level.split("_")[1]),
+          level: levelNum,
+        });
+      }
+
+      // Send escalation email
+      const user = await prisma.user.findUnique({
+        where: { id: n.user.id },
+        select: { email: true },
+      });
+      if (user?.email && shouldNotifyChannel(prefs, "email", n.notifType)) {
+        await sendEscalationEmail({
+          recipientEmail: user.email,
+          recipientName: n.user.name ?? "Caregiver",
+          missedCaregiverName: caregiverName,
+          shiftStart: shift.startTime,
+          level: levelNum,
         });
       }
     })
