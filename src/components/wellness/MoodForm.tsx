@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 
 const MOOD_EMOJIS = ["😞", "😕", "😐", "🙂", "😊"];
+const MOOD_LABELS = ["Very low", "Low", "Okay", "Good", "Great"];
 const SYMPTOM_OPTIONS = [
   "Nausea", "Fatigue", "Pain", "Dizziness", "Headache",
   "Loss of appetite", "Difficulty sleeping", "Anxiety",
@@ -57,6 +58,8 @@ function SliderRow({
         max={max}
         value={value ?? min}
         onChange={(e) => onChange(parseInt(e.target.value))}
+        aria-label={`${label} (${min} to ${max})`}
+        aria-valuetext={value !== null ? `${value} out of ${max}` : "Not set"}
         className="w-full accent-primary h-2"
       />
     </div>
@@ -115,6 +118,7 @@ export function MoodForm({ initialValues, onSave }: MoodFormProps) {
               }`}
             >
               {emoji}
+              <span className="sr-only">{MOOD_LABELS[i]}</span>
             </button>
           ))}
         </div>

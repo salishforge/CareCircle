@@ -94,7 +94,7 @@ export function MedCard({
                 variant="outline"
                 className="h-9 w-9 p-0 text-red-500 hover:text-red-600"
                 onClick={onLogSkipped}
-                title="Skip"
+                aria-label={`Skip ${medication.name}`}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -102,7 +102,7 @@ export function MedCard({
                 size="sm"
                 className="h-9 w-9 p-0"
                 onClick={onLogTaken}
-                title="Taken"
+                aria-label={`Mark ${medication.name} as taken`}
               >
                 <Check className="h-4 w-4" />
               </Button>

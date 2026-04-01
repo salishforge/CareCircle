@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { MedCard } from "@/components/medications/MedCard";
 import {
   Sheet,
@@ -125,27 +126,47 @@ export default function MedicationsPage() {
               <SheetTitle>Add Medication</SheetTitle>
             </SheetHeader>
             <form onSubmit={handleAdd} className="space-y-3 mt-4">
-              <Input
-                placeholder="Medication name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-              <Input
-                placeholder="Dosage (e.g., 500mg)"
-                value={dosage}
-                onChange={(e) => setDosage(e.target.value)}
-              />
-              <Input
-                placeholder="Frequency (e.g., twice daily)"
-                value={frequency}
-                onChange={(e) => setFrequency(e.target.value)}
-              />
-              <Input
-                placeholder="Timing (e.g., with food)"
-                value={timing}
-                onChange={(e) => setTiming(e.target.value)}
-              />
+              <div>
+                <Label htmlFor="med-name">Medication name <span className="text-destructive">*</span></Label>
+                <Input
+                  id="med-name"
+                  placeholder="e.g., Lisinopril"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="med-dosage">Dosage</Label>
+                <Input
+                  id="med-dosage"
+                  placeholder="e.g., 500mg, 1 tablet"
+                  value={dosage}
+                  onChange={(e) => setDosage(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="med-freq">Frequency</Label>
+                <Input
+                  id="med-freq"
+                  placeholder="e.g., Twice daily, Every 12 hours"
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="med-timing">Timing</Label>
+                <Input
+                  id="med-timing"
+                  placeholder="e.g., With food, 30 min before meals"
+                  value={timing}
+                  onChange={(e) => setTiming(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
               <Button type="submit" className="w-full" disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Medication"}
               </Button>
@@ -158,7 +179,14 @@ export default function MedicationsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Pill className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-muted-foreground text-sm">No medications added yet</p>
+            <p className="text-muted-foreground text-sm font-medium">No medications yet</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Track your medications and log daily doses
+            </p>
+            <Button size="sm" className="mt-4" onClick={() => setSheetOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              Add First Medication
+            </Button>
           </CardContent>
         </Card>
       ) : (
