@@ -33,9 +33,13 @@ export default function GratitudePage() {
     fetch("/api/circles")
       .then((r) => r.json())
       .then((data) => {
-        if (data?.[0]?.careCircleId) setCareCircleId(data[0].careCircleId);
+        if (data?.[0]?.careCircleId) {
+          setCareCircleId(data[0].careCircleId);
+        } else {
+          setLoading(false);
+        }
       })
-      .catch(() => {});
+      .catch(() => setLoading(false));
   }, []);
 
   const loadMessages = useCallback(async () => {
