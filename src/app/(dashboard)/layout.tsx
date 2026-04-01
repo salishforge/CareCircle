@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/shared/BottomNav";
 import { EmergencyBanner } from "@/components/shared/EmergencyBanner";
 import { NotificationBell } from "@/components/shared/NotificationBell";
+import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
 import { Settings } from "lucide-react";
 import Link from "next/link";
 
@@ -45,6 +46,7 @@ export default async function DashboardLayout({
 
       {/* Bottom navigation */}
       <BottomNav />
+      <ServiceWorkerRegistration />
     </div>
   );
 }

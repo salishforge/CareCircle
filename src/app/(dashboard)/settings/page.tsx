@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignOutButton } from "@/components/shared/SignOutButton";
 import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
+import { ThemeToggle } from "@/components/settings/ThemeToggle";
 import Link from "next/link";
 import {
   Salad,
@@ -36,6 +37,8 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ThemeToggle />
 
       <NotificationPreferences />
 

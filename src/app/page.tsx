@@ -1,65 +1,161 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Calendar,
+  UtensilsCrossed,
+  Heart,
+  Shield,
+  MessageCircle,
+  Pill,
+  Users,
+  ArrowRight,
+} from "lucide-react";
 
-export default function Home() {
+const features = [
+  {
+    icon: Calendar,
+    title: "24/7 Shift Coordination",
+    description: "Schedule caregivers around the clock with check-in tracking and escalation alerts.",
+    color: "bg-sage/10 text-sage-dark",
+  },
+  {
+    icon: UtensilsCrossed,
+    title: "Meal Planning",
+    description: "Plan meals, track nutrition, and let community members sign up to bring food.",
+    color: "bg-amber/10 text-amber-dark",
+  },
+  {
+    icon: Heart,
+    title: "Wellness Tracking",
+    description: "Daily mood, energy, pain, and sleep journals with trend visualization.",
+    color: "bg-coral/10 text-coral-dark",
+  },
+  {
+    icon: Pill,
+    title: "Medication Management",
+    description: "Track medications, log doses, and receive reminders so nothing is missed.",
+    color: "bg-teal/10 text-teal-600",
+  },
+  {
+    icon: MessageCircle,
+    title: "AI Care Assistant",
+    description: "Ask questions about schedules, meals, and care tasks with an always-available assistant.",
+    color: "bg-primary/10 text-primary",
+  },
+  {
+    icon: Shield,
+    title: "Safety & Escalation",
+    description: "Automatic 3-level escalation when caregivers are late, with SMS alerts to the whole team.",
+    color: "bg-red-50 text-red-700",
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+        <div className="flex items-center justify-between h-14 px-4 max-w-5xl mx-auto">
+          <span className="text-lg font-bold text-primary tracking-tight">
+            CareCircle
+          </span>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/login">Sign In</Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link href="/register">Get Started</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="flex-1 flex flex-col items-center justify-center px-4 py-16 md:py-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-6">
+            <Users className="h-4 w-4" />
+            Community-powered care
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
+            Coordinate care for your loved one,{" "}
+            <span className="text-primary">together</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-4 text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
+            Organize 24/7 caregiving shifts, meal plans, medications, and daily
+            logistics with your family and community — all in one place.
           </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+            <Button size="lg" asChild>
+              <Link href="/register">
+                Start Your Care Circle
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link href="#features">See How It Works</Link>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="px-4 py-16 bg-muted/30">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold">Everything your care team needs</h2>
+            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+              From scheduling shifts to tracking meals and medications — built for
+              families navigating cancer care, chronic illness, and elder care.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {features.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <Card key={feature.title} className="border-0 shadow-sm">
+                  <CardContent className="pt-6">
+                    <div
+                      className={`h-10 w-10 rounded-lg flex items-center justify-center mb-3 ${feature.color}`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="font-semibold">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* CTA */}
+      <section className="px-4 py-16 text-center">
+        <div className="max-w-lg mx-auto">
+          <h2 className="text-2xl font-bold">Ready to get started?</h2>
+          <p className="text-muted-foreground mt-2">
+            Create your care circle in minutes and invite your team.
+          </p>
+          <Button size="lg" className="mt-6" asChild>
+            <Link href="/register">
+              Create Your Care Circle
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border py-6 px-4">
+        <div className="max-w-5xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
+          <span className="font-semibold text-primary">CareCircle</span>
+          <span>Built with care for caregivers</span>
+        </div>
+      </footer>
     </div>
   );
 }
