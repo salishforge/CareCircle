@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireCircleMembership } from "@/lib/auth-utils";
 import { z } from "zod";
 
 const updateItemSchema = z.object({
@@ -26,6 +27,17 @@ export async function PATCH(
   if (!parsed.success) {
     return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
+
+  // Verify circle membership via item's parent list
+  const item = await prisma.shoppingItem.findUnique({
+    where: { id },
+    include: { list: { select: { careCircleId: true } } },
+  });
+  if (!item) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+  const membershipError = await requireCircleMembership(session.user.id, item.list.careCircleId);
+  if (membershipError) return membershipError;
 
   // If claiming, auto-assign to self
   const data = { ...parsed.data };
@@ -54,6 +66,16 @@ export async function DELETE(
   }
 
   const { id } = await ctx.params;
+
+  const item = await prisma.shoppingItem.findUnique({
+    where: { id },
+    include: { list: { select: { careCircleId: true } } },
+  });
+  if (!item) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+  const membershipError = await requireCircleMembership(session.user.id, item.list.careCircleId);
+  if (membershipError) return membershipError;
 
   await prisma.shoppingItem.delete({ where: { id } });
 

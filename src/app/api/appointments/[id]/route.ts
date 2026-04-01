@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireCircleMembership } from "@/lib/auth-utils";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -32,8 +33,11 @@ export async function PATCH(
 
   const existing = await prisma.appointment.findUnique({ where: { id } });
   if (!existing) {
-    return Response.json({ error: "Appointment not found" }, { status: 404 });
+    return Response.json({ error: "Not found" }, { status: 404 });
   }
+
+  const membershipError = await requireCircleMembership(session.user.id, existing.careCircleId);
+  if (membershipError) return membershipError;
 
   const updateData: Record<string, unknown> = {};
   if (parsed.data.title) updateData.title = parsed.data.title;

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireCircleMembership } from "@/lib/auth-utils";
 import { getWeeklyCoverage } from "@/lib/coverage-validator";
 import { subDays, startOfDay } from "date-fns";
 
@@ -16,6 +17,9 @@ export async function GET(request: Request) {
   if (!careCircleId) {
     return Response.json({ error: "careCircleId required" }, { status: 400 });
   }
+
+  const membershipError = await requireCircleMembership(session.user.id, careCircleId);
+  if (membershipError) return membershipError;
 
   const since = startOfDay(subDays(new Date(), days));
   const now = new Date();

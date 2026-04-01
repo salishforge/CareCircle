@@ -9,12 +9,10 @@ import { getUserPrefs, shouldNotifyChannel } from "@/lib/notification-utils";
  * Sends shift reminders (30 min before) and medication reminders.
  */
 export async function POST(request: Request) {
-  // Verify cron secret
-  const authHeader = request.headers.get("authorization");
-  if (
-    process.env.CRON_SECRET &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
+  // Verify cron secret with constant-time comparison
+  const { safeCompare } = await import("@/lib/auth-utils");
+  const authHeader = request.headers.get("authorization") ?? "";
+  if (process.env.CRON_SECRET && !safeCompare(authHeader, `Bearer ${process.env.CRON_SECRET}`)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import {
   CheckInMethod,
   CheckInStatus,
@@ -13,6 +14,10 @@ export async function POST(request: Request) {
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // Rate limit: 10 check-ins per user per minute
+  const rl = checkRateLimit(`checkin:${session.user.id}`, { max: 10, windowSec: 60 });
+  if (!rl.allowed) return rateLimitResponse(rl);
 
   const body = await request.json().catch(() => ({}));
   const { shiftId, latitude, longitude } = body;

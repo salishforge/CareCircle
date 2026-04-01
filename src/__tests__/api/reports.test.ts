@@ -6,7 +6,10 @@ const mockPrisma = {
   moodEntry: { findMany: vi.fn() },
   meal: { count: vi.fn() },
   patientRequest: { count: vi.fn() },
-  careCircleMember: { count: vi.fn() },
+  careCircleMember: {
+    count: vi.fn(),
+    findFirst: vi.fn(() => Promise.resolve({ id: "m1", role: "CAREGIVER" })),
+  },
 };
 
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));

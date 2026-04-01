@@ -9,11 +9,9 @@ import { format, startOfDay, endOfDay } from "date-fns";
  * Sends a summary email to all circle members with email enabled.
  */
 export async function POST(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  if (
-    process.env.CRON_SECRET &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
+  const { safeCompare } = await import("@/lib/auth-utils");
+  const authHeader = request.headers.get("authorization") ?? "";
+  if (process.env.CRON_SECRET && !safeCompare(authHeader, `Bearer ${process.env.CRON_SECRET}`)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

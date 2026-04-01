@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { timingSafeEqual } from "crypto";
 
 /**
  * Verify that a user is an active member of a care circle.
@@ -29,4 +30,22 @@ export async function requireCircleMembership(
     );
   }
   return null;
+}
+
+/**
+ * Constant-time string comparison to prevent timing attacks on secrets.
+ */
+export function safeCompare(a: string, b: string): boolean {
+  try {
+    const bufA = Buffer.from(a);
+    const bufB = Buffer.from(b);
+    if (bufA.length !== bufB.length) {
+      // Compare against self to maintain constant time
+      timingSafeEqual(bufA, bufA);
+      return false;
+    }
+    return timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
 }

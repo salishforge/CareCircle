@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getVapidPublicKey } from "@/lib/web-push";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
 
 export async function GET() {
@@ -20,6 +21,10 @@ export async function POST(request: Request) {
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // Rate limit: 5 subscriptions per user per minute
+  const rl = checkRateLimit(`push-sub:${session.user.id}`, { max: 5, windowSec: 60 });
+  if (!rl.allowed) return rateLimitResponse(rl);
 
   const body = await request.json().catch(() => ({}));
   const parsed = subscribeSchema.safeParse(body);

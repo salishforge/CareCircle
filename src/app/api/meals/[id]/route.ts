@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireCircleMembership } from "@/lib/auth-utils";
 import { z } from "zod";
 
 const updateMealSchema = z.object({
@@ -35,8 +36,11 @@ export async function PATCH(
   });
 
   if (!meal) {
-    return Response.json({ error: "Meal not found" }, { status: 404 });
+    return Response.json({ error: "Not found" }, { status: 404 });
   }
+
+  const membershipError = await requireCircleMembership(session.user.id, meal.mealPlan.careCircleId);
+  if (membershipError) return membershipError;
 
   const updated = await prisma.meal.update({
     where: { id },
@@ -59,6 +63,17 @@ export async function DELETE(
   }
 
   const { id } = await ctx.params;
+
+  const meal = await prisma.meal.findUnique({
+    where: { id },
+    include: { mealPlan: { select: { careCircleId: true } } },
+  });
+  if (!meal) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const membershipError = await requireCircleMembership(session.user.id, meal.mealPlan.careCircleId);
+  if (membershipError) return membershipError;
 
   await prisma.meal.delete({ where: { id } });
 

@@ -46,14 +46,15 @@ describe("GET /api/nutrition", () => {
     expect(data.allergies).toEqual(["Peanuts"]);
   });
 
-  it("accepts patientId query param", async () => {
+  it("always scopes to authenticated user (no IDOR via patientId param)", async () => {
     mockPrisma.patientNutritionProfile.findUnique.mockResolvedValue(null);
 
+    // Even with patientId param, should use session user
     const req = new Request("http://localhost/api/nutrition?patientId=other-user");
     await GET(req);
 
     expect(mockPrisma.patientNutritionProfile.findUnique).toHaveBeenCalledWith({
-      where: { patientId: "other-user" },
+      where: { patientId: "user-1" },
     });
   });
 });

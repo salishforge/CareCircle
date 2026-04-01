@@ -18,8 +18,8 @@ export async function GET(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const patientId = searchParams.get("patientId") ?? session.user.id;
+  // Always scope to authenticated user (prevents IDOR)
+  const patientId = session.user.id;
 
   const medications = await prisma.medicationEntry.findMany({
     where: { patientId, isActive: true },
