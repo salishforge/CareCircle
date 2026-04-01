@@ -1,3 +1,5 @@
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,7 +53,10 @@ const features = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Redirect authenticated users to dashboard
+  const session = await auth();
+  if (session?.user) redirect("/home");
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}

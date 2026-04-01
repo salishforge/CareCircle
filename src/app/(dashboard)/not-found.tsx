@@ -15,7 +15,7 @@ export default function DashboardNotFound() {
           <p className="text-sm text-muted-foreground mt-2">
             This page doesn&apos;t exist. Head back to the dashboard.
           </p>
-          <Button className="mt-6" render={<Link href="/" />}>
+          <Button className="mt-6" render={<Link href="/home" />}>
             Dashboard
           </Button>
         </CardContent>

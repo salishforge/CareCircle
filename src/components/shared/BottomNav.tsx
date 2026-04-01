@@ -24,7 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const primaryNav = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/home", label: "Home", icon: Home },
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/meals", label: "Meals", icon: UtensilsCrossed },
   { href: "/chat", label: "Chat", icon: MessageCircle },
@@ -102,8 +102,8 @@ export function BottomNav() {
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
           {primaryNav.map((item) => {
             const isActive =
-              item.href === "/"
-                ? pathname === "/"
+              item.href === "/home"
+                ? pathname === "/home"
                 : pathname.startsWith(item.href);
             const Icon = item.icon;
 

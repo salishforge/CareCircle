@@ -29,7 +29,7 @@ export default function DashboardError({
             </p>
           )}
           <div className="flex gap-3 justify-center mt-6">
-            <Button variant="outline" render={<Link href="/" />}>
+            <Button variant="outline" render={<Link href="/home" />}>
               Go Home
             </Button>
             <Button onClick={reset}>Try Again</Button>
