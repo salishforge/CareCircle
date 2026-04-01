@@ -173,3 +173,17 @@
     overscroll-behavior-y: contain;
   }
 }
+
+/* Smart Board / large display optimizations */
+@media (min-width: 1280px) {
+  /* Larger touch targets on big screens */
+  button, a, [role="button"] {
+    min-height: 48px;
+  }
+
+  /* Slightly larger base text for readability at distance */
+  .xl\:board-text {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}

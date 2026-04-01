@@ -4,6 +4,7 @@ import { WhoIsHere } from "@/components/dashboard/WhoIsHere";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TodayOverview } from "@/components/dashboard/TodayOverview";
 import { CheckInButton } from "@/components/dashboard/CheckInButton";
+import { HomeDashboard } from "@/components/dashboard/HomeDashboard";
 import {
   getActiveCareCircle,
   getCurrentShift,
@@ -19,7 +20,7 @@ export default async function DashboardPage() {
   const userId = session?.user?.id;
 
   const membership = userId ? await getActiveCareCircle(userId) : null;
-  const circleId = membership?.careCircleId;
+  const circleId = membership?.careCircleId ?? null;
 
   const [currentShift, nextShift, mealCounts, pendingRequests, appointmentCount, myShift] =
     circleId && userId
@@ -55,34 +56,52 @@ export default async function DashboardPage() {
   const alreadyCheckedIn = (myShift?.checkIns?.length ?? 0) > 0;
 
   return (
-    <div className="space-y-6 py-6">
-      <div>
-        <h2 className="text-2xl font-bold">
+    <div className="py-6">
+      <div className="mb-6">
+        <h2 className="text-2xl xl:text-3xl font-bold">
           Hi{firstName ? `, ${firstName}` : ""}
         </h2>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-sm xl:text-base mt-1">
           Here&apos;s what&apos;s happening today
         </p>
       </div>
 
-      {myShift && (
-        <CheckInButton
-          shiftId={myShift.id}
-          shiftEnd={format(myShift.endTime, "h:mm a")}
-          alreadyCheckedIn={alreadyCheckedIn}
+      {/* Mobile layout — single column stack */}
+      <div className="xl:hidden space-y-6">
+        {myShift && (
+          <CheckInButton
+            shiftId={myShift.id}
+            shiftEnd={format(myShift.endTime, "h:mm a")}
+            alreadyCheckedIn={alreadyCheckedIn}
+          />
+        )}
+
+        <WhoIsHere currentCaregiver={currentCaregiver} nextCaregiver={nextCaregiver} />
+        <QuickActions />
+        <TodayOverview
+          mealsPlanned={mealCounts.planned}
+          mealsDelivered={mealCounts.delivered}
+          appointmentsCount={appointmentCount}
+          pendingRequests={pendingRequests}
         />
-      )}
+      </div>
 
-      <WhoIsHere currentCaregiver={currentCaregiver} nextCaregiver={nextCaregiver} />
-
-      <QuickActions />
-
-      <TodayOverview
-        mealsPlanned={mealCounts.planned}
-        mealsDelivered={mealCounts.delivered}
-        appointmentsCount={appointmentCount}
-        pendingRequests={pendingRequests}
-      />
+      {/* Desktop/Smart Board layout — widget grid */}
+      <div className="hidden xl:block">
+        <HomeDashboard
+          careCircleId={circleId}
+          currentCaregiver={currentCaregiver}
+          nextCaregiver={nextCaregiver}
+          mealCounts={mealCounts}
+          appointmentCount={appointmentCount}
+          pendingRequests={pendingRequests}
+          myShift={myShift ? {
+            id: myShift.id,
+            shiftEnd: format(myShift.endTime, "h:mm a"),
+            alreadyCheckedIn,
+          } : null}
+        />
+      </div>
     </div>
   );
 }
