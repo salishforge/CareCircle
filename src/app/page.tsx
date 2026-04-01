@@ -61,11 +61,11 @@ export default function HomePage() {
             CareCircle
           </span>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">Sign In</Link>
+            <Button variant="ghost" size="sm" render={<Link href="/login" />}>
+              Sign In
             </Button>
-            <Button size="sm" asChild>
-              <Link href="/register">Get Started</Link>
+            <Button size="sm" render={<Link href="/register" />}>
+              Get Started
             </Button>
           </div>
         </div>
@@ -87,14 +87,12 @@ export default function HomePage() {
             logistics with your family and community — all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-            <Button size="lg" asChild>
-              <Link href="/register">
-                Start Your Care Circle
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
+            <Button size="lg" render={<Link href="/register" />}>
+              Start Your Care Circle
+              <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
-            <Button variant="outline" size="lg" asChild>
-              <Link href="#features">See How It Works</Link>
+            <Button variant="outline" size="lg" render={<Link href="#features" />}>
+              See How It Works
             </Button>
           </div>
         </div>
@@ -140,11 +138,9 @@ export default function HomePage() {
           <p className="text-muted-foreground mt-2">
             Create your care circle in minutes and invite your team.
           </p>
-          <Button size="lg" className="mt-6" asChild>
-            <Link href="/register">
-              Create Your Care Circle
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
+          <Button size="lg" className="mt-6" render={<Link href="/register" />}>
+            Create Your Care Circle
+            <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
       </section>

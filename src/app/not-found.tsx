@@ -15,8 +15,8 @@ export default function NotFound() {
           <p className="text-sm text-muted-foreground mt-2">
             The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </p>
-          <Button className="mt-6" asChild>
-            <Link href="/">Go Home</Link>
+          <Button className="mt-6" render={<Link href="/" />}>
+            Go Home
           </Button>
         </CardContent>
       </Card>
