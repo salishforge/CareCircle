@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireCircleMembership } from "@/lib/auth-utils";
 import { z } from "zod";
 import { startOfWeek, endOfWeek } from "date-fns";
 
@@ -29,6 +30,9 @@ export async function GET(request: Request) {
   if (!careCircleId) {
     return NextResponse.json({ error: "careCircleId required" }, { status: 400 });
   }
+
+  const membershipError = await requireCircleMembership(session.user.id, careCircleId);
+  if (membershipError) return membershipError;
 
   const refDate = weekOf ? new Date(weekOf) : new Date();
   const weekStart = startOfWeek(refDate, { weekStartsOn: 0 });
@@ -126,6 +130,9 @@ export async function POST(request: Request) {
   }
 
   const { careCircleId, date, startTime, endTime, notes } = parsed.data;
+
+  const membershipError = await requireCircleMembership(session.user.id, careCircleId);
+  if (membershipError) return membershipError;
 
   const shift = await prisma.careShift.create({
     data: {

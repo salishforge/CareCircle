@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireCircleMembership } from "@/lib/auth-utils";
 import { z } from "zod";
 
 const documentSchema = z.object({
@@ -26,6 +27,9 @@ export async function GET(request: Request) {
     return Response.json({ error: "careCircleId required" }, { status: 400 });
   }
 
+  const membershipError = await requireCircleMembership(session.user.id, careCircleId);
+  if (membershipError) return membershipError;
+
   const documents = await prisma.document.findMany({
     where: {
       careCircleId,
@@ -51,6 +55,9 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
+
+  const membershipError = await requireCircleMembership(session.user.id, parsed.data.careCircleId);
+  if (membershipError) return membershipError;
 
   const document = await prisma.document.create({
     data: {

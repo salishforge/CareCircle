@@ -7,6 +7,9 @@ const mockPrisma = {
     create: vi.fn(),
     update: vi.fn(),
   },
+  careCircleMember: {
+    findFirst: vi.fn(() => Promise.resolve({ id: "m1", role: "CAREGIVER" })),
+  },
 };
 
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));

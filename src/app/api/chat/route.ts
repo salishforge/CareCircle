@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { anthropic } from "@ai-sdk/anthropic";
 import { streamText } from "ai";
 import { z } from "zod";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const messageSchema = z.object({
   careCircleId: z.string(),
@@ -22,6 +23,10 @@ export async function POST(request: Request) {
   }
 
   const { careCircleId, message } = parsed.data;
+
+  // Rate limit: 20 messages per user per hour
+  const rl = checkRateLimit(`chat:${session.user.id}`, { max: 20, windowSec: 3600 });
+  if (!rl.allowed) return rateLimitResponse(rl);
 
   // Verify membership
   const membership = await prisma.careCircleMember.findFirst({

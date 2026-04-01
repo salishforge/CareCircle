@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireCircleMembership } from "@/lib/auth-utils";
 import { z } from "zod";
 import { startOfWeek } from "date-fns";
 
@@ -27,6 +28,9 @@ export async function GET(request: Request) {
   if (!careCircleId) {
     return Response.json({ error: "careCircleId required" }, { status: 400 });
   }
+
+  const membershipError = await requireCircleMembership(session.user.id, careCircleId);
+  if (membershipError) return membershipError;
 
   const refDate = weekOf ? new Date(weekOf) : new Date();
   const weekStart = startOfWeek(refDate, { weekStartsOn: 0 });
@@ -61,6 +65,9 @@ export async function POST(request: Request) {
 
   const { careCircleId, date, mealType, title, description, calories, proteinGrams, specialNotes } =
     parsed.data;
+
+  const membershipError = await requireCircleMembership(session.user.id, careCircleId);
+  if (membershipError) return membershipError;
 
   const mealDate = new Date(date);
   const weekStart = startOfWeek(mealDate, { weekStartsOn: 0 });
