@@ -4,6 +4,8 @@ import { BottomNav } from "@/components/shared/BottomNav";
 import { EmergencyBanner } from "@/components/shared/EmergencyBanner";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
+import { InstallPrompt } from "@/components/providers/InstallPrompt";
+import { PullToRefresh } from "@/components/shared/PullToRefresh";
 import { Settings } from "lucide-react";
 import Link from "next/link";
 
@@ -21,8 +23,8 @@ export default async function DashboardLayout({
       <EmergencyBanner />
 
       {/* Top header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-        <div className="flex items-center justify-between h-14 px-4 max-w-lg mx-auto">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border pt-[env(safe-area-inset-top)]">
+        <div className="flex items-center justify-between h-14 px-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] max-w-lg mx-auto">
           <h1 className="text-lg font-bold text-primary tracking-tight">
             CareCircle
           </h1>
@@ -40,12 +42,15 @@ export default async function DashboardLayout({
       </header>
 
       {/* Main content */}
-      <main className="flex-1 pb-20 px-4 max-w-lg mx-auto w-full">
-        {children}
+      <main className="flex-1 pb-20 px-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] max-w-lg mx-auto w-full">
+        <PullToRefresh>
+          {children}
+        </PullToRefresh>
       </main>
 
       {/* Bottom navigation */}
       <BottomNav />
+      <InstallPrompt />
       <ServiceWorkerRegistration />
     </div>
   );

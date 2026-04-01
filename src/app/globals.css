@@ -143,8 +143,33 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Standalone PWA — adjust for status bar */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Touch feedback on interactive elements */
+@layer utilities {
+  .touch-feedback {
+    transition: transform 0.1s ease;
+  }
+  .touch-feedback:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Smooth scrolling for pull-to-refresh */
+@supports (overscroll-behavior: contain) {
+  main {
+    overscroll-behavior-y: contain;
   }
 }

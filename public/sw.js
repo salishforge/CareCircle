@@ -1,5 +1,42 @@
-// CareCircle Service Worker — Push Notifications
+// CareCircle Service Worker — Push Notifications + Offline Support
 
+const CACHE_NAME = "carecircle-v1";
+const OFFLINE_URL = "/offline.html";
+
+// Precache offline fallback on install
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll([OFFLINE_URL, "/icons/icon.svg"])
+    )
+  );
+  self.skipWaiting();
+});
+
+// Clean old caches on activate
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((names) =>
+      Promise.all(
+        names
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+// Serve offline fallback for navigation requests
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    );
+  }
+});
+
+// Push notification handling
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -12,8 +49,8 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: payload.body || "",
-    icon: "/icons/icon-192.png",
-    badge: "/icons/icon-72.png",
+    icon: "/icons/icon.svg",
+    badge: "/icons/icon.svg",
     data: payload.data || {},
     vibrate: [100, 50, 100],
     tag: payload.tag || "carecircle-notification",
@@ -21,7 +58,6 @@ self.addEventListener("push", (event) => {
     actions: [],
   };
 
-  // Add actions based on notification type
   if (payload.data?.type === "ESCALATION") {
     options.actions = [
       { action: "view", title: "View Details" },
