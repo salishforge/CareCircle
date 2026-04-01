@@ -1,6 +1,13 @@
 import { auth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignOutButton } from "@/components/shared/SignOutButton";
+import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
+import Link from "next/link";
+import {
+  Salad,
+  BarChart3,
+  ArrowUpDown,
+} from "lucide-react";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -27,6 +34,38 @@ export default async function SettingsPage() {
             <p className="text-sm text-muted-foreground">Email</p>
             <p className="font-medium">{session?.user?.email || "Not set"}</p>
           </div>
+        </CardContent>
+      </Card>
+
+      <NotificationPreferences />
+
+      {/* Quick links to advanced features */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Care Management</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          <Link
+            href="/nutrition"
+            className="flex items-center gap-3 py-2.5 px-1 rounded-lg hover:bg-muted transition-colors"
+          >
+            <Salad className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">Nutrition Profile</span>
+          </Link>
+          <Link
+            href="/swaps"
+            className="flex items-center gap-3 py-2.5 px-1 rounded-lg hover:bg-muted transition-colors"
+          >
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">Shift Swaps</span>
+          </Link>
+          <Link
+            href="/reports"
+            className="flex items-center gap-3 py-2.5 px-1 rounded-lg hover:bg-muted transition-colors"
+          >
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">Care Reports</span>
+          </Link>
         </CardContent>
       </Card>
 
