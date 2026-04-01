@@ -60,7 +60,8 @@ export function WidgetGrid({ widgets }: WidgetGridProps) {
     const initial = loadLayout(widgetIds);
     // Hide widgets not defaultVisible unless user previously showed them
     const defaultHidden = widgets.filter((w) => !w.defaultVisible).map((w) => w.id);
-    if (!localStorage.getItem(STORAGE_KEY)) {
+    const hasSaved = typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY);
+    if (!hasSaved) {
       initial.hidden = defaultHidden;
     }
     return initial;
