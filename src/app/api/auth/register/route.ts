@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
@@ -51,6 +51,41 @@ export async function POST(request: Request) {
         authProvider: "LOCAL",
       },
     });
+
+    // Single care circle model: auto-join the existing circle, or create one
+    // if this is the first user (the patient).
+    const existingCircle = await prisma.careCircle.findFirst({
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (existingCircle) {
+      // Join existing circle
+      await prisma.careCircleMember.create({
+        data: {
+          careCircleId: existingCircle.id,
+          userId: user.id,
+          role: role as "PATIENT" | "PRIMARY_CAREGIVER" | "CAREGIVER" | "MEAL_PROVIDER",
+        },
+      });
+    } else {
+      // First user — create the care circle
+      const circleName = role === "PATIENT"
+        ? `${name}'s Care Circle`
+        : "Care Circle";
+
+      await prisma.careCircle.create({
+        data: {
+          name: circleName,
+          patientId: user.id,
+          members: {
+            create: {
+              userId: user.id,
+              role: role as "PATIENT" | "PRIMARY_CAREGIVER" | "CAREGIVER" | "MEAL_PROVIDER",
+            },
+          },
+        },
+      });
+    }
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch {
