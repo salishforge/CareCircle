@@ -12,31 +12,41 @@ import {
   subMonths,
   addDays,
   isSameMonth,
-  isSameDay,
   isToday,
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface DayData {
-  hasShifts: boolean;
-  hasAppointments: boolean;
-  hasMeals: boolean;
+interface EventItem {
+  id: string;
+  label: string;
+  time: string;
+  type: "shift" | "appointment" | "meal";
 }
 
-const DAY_HEADERS = ["S", "M", "T", "W", "T", "F", "S"];
+interface DayEvents {
+  events: EventItem[];
+}
+
+const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_HEADERS_SHORT = ["S", "M", "T", "W", "T", "F", "S"];
+
+const EVENT_COLORS: Record<string, string> = {
+  shift: "bg-sage/20 text-sage-dark border-l-2 border-l-sage",
+  appointment: "bg-amber/20 text-amber-dark border-l-2 border-l-amber",
+  meal: "bg-coral/10 text-coral-dark border-l-2 border-l-coral",
+};
 
 export function MonthGrid({ careCircleId }: { careCircleId: string | null }) {
   const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [dayData, setDayData] = useState<Record<string, DayData>>({});
+  const [dayEvents, setDayEvents] = useState<Record<string, DayEvents>>({});
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
 
-  // Build array of all visible days
   const days: Date[] = [];
   let d = calendarStart;
   while (d <= calendarEnd) {
@@ -46,11 +56,8 @@ export function MonthGrid({ careCircleId }: { careCircleId: string | null }) {
 
   const loadMonthData = useCallback(async () => {
     if (!careCircleId) return;
-    const from = format(calendarStart, "yyyy-MM-dd");
-    const to = format(calendarEnd, "yyyy-MM-dd");
 
     try {
-      // Fetch shifts for the month
       const [shiftsRes, apptsRes] = await Promise.all([
         fetch(`/api/shifts?careCircleId=${careCircleId}&weekOf=${format(monthStart, "yyyy-MM-dd")}`),
         fetch(`/api/appointments?careCircleId=${careCircleId}&upcoming=false`),
@@ -59,25 +66,47 @@ export function MonthGrid({ careCircleId }: { careCircleId: string | null }) {
       const shifts = await shiftsRes.json().catch(() => []);
       const appointments = await apptsRes.json().catch(() => []);
 
-      const data: Record<string, DayData> = {};
+      const data: Record<string, DayEvents> = {};
+
+      function ensureDay(dateKey: string) {
+        if (!data[dateKey]) data[dateKey] = { events: [] };
+      }
 
       if (Array.isArray(shifts)) {
         for (const shift of shifts) {
           const dateKey = shift.date?.split("T")[0] ?? format(new Date(shift.startTime), "yyyy-MM-dd");
-          if (!data[dateKey]) data[dateKey] = { hasShifts: false, hasAppointments: false, hasMeals: false };
-          data[dateKey].hasShifts = true;
+          ensureDay(dateKey);
+          const name = shift.primaryCaregiver?.name?.split(" ")[0] ?? "Open";
+          const time = format(new Date(shift.startTime), "ha").toLowerCase();
+          data[dateKey].events.push({
+            id: shift.id,
+            label: name,
+            time,
+            type: "shift",
+          });
         }
       }
 
       if (Array.isArray(appointments)) {
         for (const appt of appointments) {
           const dateKey = format(new Date(appt.dateTime), "yyyy-MM-dd");
-          if (!data[dateKey]) data[dateKey] = { hasShifts: false, hasAppointments: false, hasMeals: false };
-          data[dateKey].hasAppointments = true;
+          ensureDay(dateKey);
+          const time = format(new Date(appt.dateTime), "ha").toLowerCase();
+          data[dateKey].events.push({
+            id: appt.id,
+            label: appt.title,
+            time,
+            type: "appointment",
+          });
         }
       }
 
-      setDayData(data);
+      // Sort events by time within each day
+      for (const day of Object.values(data)) {
+        day.events.sort((a, b) => a.time.localeCompare(b.time));
+      }
+
+      setDayEvents(data);
     } catch {
       // ignore
     }
@@ -119,58 +148,90 @@ export function MonthGrid({ careCircleId }: { careCircleId: string | null }) {
         </Button>
       </div>
 
-      {/* Day headers */}
+      {/* Day headers — short on mobile, full on md+ */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_HEADERS.map((header, i) => (
           <div
             key={i}
             className="text-center text-xs font-semibold text-muted-foreground py-2"
           >
-            {header}
+            <span className="hidden md:inline">{header}</span>
+            <span className="md:hidden">{DAY_HEADERS_SHORT[i]}</span>
           </div>
         ))}
       </div>
 
-      {/* Day cells */}
+      {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-px bg-border rounded-xl overflow-hidden">
         {days.map((day) => {
           const dateKey = format(day, "yyyy-MM-dd");
           const inMonth = isSameMonth(day, currentMonth);
           const today = isToday(day);
-          const data = dayData[dateKey];
+          const dayData = dayEvents[dateKey];
+          const events = dayData?.events ?? [];
+          // Mobile: show max 2 events, desktop: show max 4
+          const maxMobile = 2;
+          const maxDesktop = 4;
 
           return (
             <button
               key={dateKey}
               onClick={() => handleDayClick(day)}
               className={`
-                relative flex flex-col items-center py-2.5 min-h-[56px] xl:min-h-[72px] transition-colors
-                ${inMonth ? "bg-card hover:bg-muted" : "bg-muted/30 text-muted-foreground/50"}
+                relative flex flex-col items-stretch text-left
+                min-h-[64px] md:min-h-[100px] xl:min-h-[120px] p-1 md:p-1.5 transition-colors
+                ${inMonth ? "bg-card hover:bg-muted/50" : "bg-muted/20 text-muted-foreground/40"}
                 ${today ? "ring-2 ring-inset ring-primary" : ""}
               `}
-              aria-label={`${format(day, "EEEE, MMMM d")}${data?.hasShifts ? ", has shifts" : ""}${data?.hasAppointments ? ", has appointments" : ""}`}
+              aria-label={`${format(day, "EEEE, MMMM d")}${events.length > 0 ? `, ${events.length} events` : ""}`}
             >
+              {/* Day number */}
               <span
-                className={`text-sm font-medium ${
-                  today ? "bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center" : ""
+                className={`text-xs md:text-sm font-medium mb-0.5 self-end md:self-start ${
+                  today
+                    ? "bg-primary text-primary-foreground w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[11px] md:text-sm"
+                    : ""
                 }`}
               >
                 {format(day, "d")}
               </span>
 
-              {/* Indicator dots */}
-              {data && inMonth && (
-                <div className="flex gap-1 mt-1">
-                  {data.hasShifts && (
-                    <div className="h-1.5 w-1.5 rounded-full bg-sage" title="Shifts" />
-                  )}
-                  {data.hasAppointments && (
-                    <div className="h-1.5 w-1.5 rounded-full bg-amber" title="Appointments" />
-                  )}
-                  {data.hasMeals && (
-                    <div className="h-1.5 w-1.5 rounded-full bg-coral" title="Meals" />
-                  )}
-                </div>
+              {/* Events — mobile: dots + count, md+: event labels */}
+              {events.length > 0 && inMonth && (
+                <>
+                  {/* Mobile: compact dots */}
+                  <div className="flex flex-wrap gap-0.5 mt-auto md:hidden">
+                    {events.slice(0, 3).map((ev, i) => (
+                      <div
+                        key={i}
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          ev.type === "shift" ? "bg-sage" : ev.type === "appointment" ? "bg-amber" : "bg-coral"
+                        }`}
+                      />
+                    ))}
+                    {events.length > 3 && (
+                      <span className="text-[9px] text-muted-foreground">+{events.length - 3}</span>
+                    )}
+                  </div>
+
+                  {/* Desktop: event labels */}
+                  <div className="hidden md:flex flex-col gap-0.5 flex-1 overflow-hidden">
+                    {events.slice(0, maxDesktop).map((ev) => (
+                      <div
+                        key={ev.id}
+                        className={`text-[10px] xl:text-[11px] leading-tight px-1 py-0.5 rounded truncate ${EVENT_COLORS[ev.type]}`}
+                      >
+                        <span className="font-medium">{ev.time}</span>{" "}
+                        {ev.label}
+                      </div>
+                    ))}
+                    {events.length > maxDesktop && (
+                      <span className="text-[10px] text-muted-foreground px-1">
+                        +{events.length - maxDesktop} more
+                      </span>
+                    )}
+                  </div>
+                </>
               )}
             </button>
           );
