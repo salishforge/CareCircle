@@ -15,21 +15,24 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const circles = await prisma.careCircle.findMany({
-    where: {
-      members: { some: { userId: session.user.id, isActive: true } },
-    },
+  // Return memberships (not circles) so clients get careCircleId consistently
+  const memberships = await prisma.careCircleMember.findMany({
+    where: { userId: session.user.id, isActive: true },
     include: {
-      patient: { select: { id: true, name: true, image: true } },
-      members: {
-        where: { isActive: true },
-        include: { user: { select: { id: true, name: true, image: true, role: true } } },
+      careCircle: {
+        include: {
+          patient: { select: { id: true, name: true, image: true } },
+          members: {
+            where: { isActive: true },
+            include: { user: { select: { id: true, name: true, image: true, role: true } } },
+          },
+          _count: { select: { shifts: true } },
+        },
       },
-      _count: { select: { shifts: true } },
     },
   });
 
-  return NextResponse.json(circles);
+  return NextResponse.json(memberships);
 }
 
 export async function POST(request: Request) {
