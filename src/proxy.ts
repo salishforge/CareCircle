@@ -9,6 +9,7 @@ const publicPaths = [
   "/api/webhooks",
   "/api/sse",
   "/api/display",
+  "/api/kiosk",
   "/dashboard/display",
 ];
 
