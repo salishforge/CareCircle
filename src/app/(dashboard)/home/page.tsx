@@ -1,10 +1,9 @@
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
-import { WhoIsHere } from "@/components/dashboard/WhoIsHere";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { TodayOverview } from "@/components/dashboard/TodayOverview";
 import { CheckInButton } from "@/components/dashboard/CheckInButton";
-import { HomeDashboard } from "@/components/dashboard/HomeDashboard";
+import { WhoIsHere } from "@/components/dashboard/WhoIsHere";
+import { TileDashboard } from "@/components/dashboard/TileDashboard";
 import {
   getActiveCareCircle,
   getCurrentShift,
@@ -21,6 +20,9 @@ export default async function DashboardPage() {
 
   const membership = userId ? await getActiveCareCircle(userId) : null;
   const circleId = membership?.careCircleId ?? null;
+
+  // Check if user is admin
+  const isAdmin = membership?.role === "ADMIN" || membership?.role === "PRIMARY_CAREGIVER";
 
   const [currentShift, nextShift, mealCounts, pendingRequests, appointmentCount, myShift] =
     circleId && userId
@@ -56,52 +58,21 @@ export default async function DashboardPage() {
   const alreadyCheckedIn = (myShift?.checkIns?.length ?? 0) > 0;
 
   return (
-    <div className="py-6 xl:py-3 xl:h-[calc(100vh-1rem)] xl:flex xl:flex-col xl:overflow-hidden">
-      <div className="mb-6 xl:mb-3">
-        <h2 className="text-2xl xl:text-xl font-bold">
-          Hi{firstName ? `, ${firstName}` : ""}
-        </h2>
-        <p className="text-muted-foreground text-sm xl:text-base mt-1">
-          Here&apos;s what&apos;s happening today
-        </p>
-      </div>
-
-      {/* Mobile layout — single column stack */}
-      <div className="xl:hidden space-y-6">
-        {myShift && (
-          <CheckInButton
-            shiftId={myShift.id}
-            shiftEnd={format(myShift.endTime, "h:mm a")}
-            alreadyCheckedIn={alreadyCheckedIn}
-          />
-        )}
-
-        <WhoIsHere currentCaregiver={currentCaregiver} nextCaregiver={nextCaregiver} />
-        <QuickActions />
-        <TodayOverview
-          mealsPlanned={mealCounts.planned}
-          mealsDelivered={mealCounts.delivered}
-          appointmentsCount={appointmentCount}
-          pendingRequests={pendingRequests}
-        />
-      </div>
-
-      {/* Desktop/Smart Board layout — widget grid, fills viewport on kiosk */}
-      <div className="hidden xl:block xl:flex-1 xl:min-h-0">
-        <HomeDashboard
-          careCircleId={circleId}
-          currentCaregiver={currentCaregiver}
-          nextCaregiver={nextCaregiver}
-          mealCounts={mealCounts}
-          appointmentCount={appointmentCount}
-          pendingRequests={pendingRequests}
-          myShift={myShift ? {
-            id: myShift.id,
-            shiftEnd: format(myShift.endTime, "h:mm a"),
-            alreadyCheckedIn,
-          } : null}
-        />
-      </div>
-    </div>
+    <TileDashboard
+      careCircleId={circleId}
+      firstName={firstName}
+      isAdmin={isAdmin ?? false}
+      mealsPlanned={mealCounts.planned}
+      mealsDelivered={mealCounts.delivered}
+      pendingRequests={pendingRequests}
+      appointmentCount={appointmentCount}
+      currentCaregiver={currentCaregiver}
+      nextCaregiver={nextCaregiver}
+      myShift={myShift ? {
+        id: myShift.id,
+        shiftEnd: format(myShift.endTime, "h:mm a"),
+        alreadyCheckedIn,
+      } : null}
+    />
   );
 }
