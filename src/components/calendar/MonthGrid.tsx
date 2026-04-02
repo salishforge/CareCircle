@@ -14,8 +14,9 @@ import {
   isSameMonth,
   isToday,
 } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AddEventSheet } from "./AddEventSheet";
 
 interface EventItem {
   id: string;
@@ -41,6 +42,7 @@ export function MonthGrid({ careCircleId }: { careCircleId: string | null }) {
   const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [dayEvents, setDayEvents] = useState<Record<string, DayEvents>>({});
+  const [addDate, setAddDate] = useState<string | null>(null);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -161,7 +163,7 @@ export function MonthGrid({ careCircleId }: { careCircleId: string | null }) {
         ))}
       </div>
 
-      {/* Calendar grid */}
+      {/* Calendar grid — larger cells like a paper planner */}
       <div className="grid grid-cols-7 gap-px bg-border rounded-xl overflow-hidden">
         {days.map((day) => {
           const dateKey = format(day, "yyyy-MM-dd");
@@ -169,71 +171,85 @@ export function MonthGrid({ careCircleId }: { careCircleId: string | null }) {
           const today = isToday(day);
           const dayData = dayEvents[dateKey];
           const events = dayData?.events ?? [];
-          // Mobile: show max 2 events, desktop: show max 4
-          const maxMobile = 2;
-          const maxDesktop = 4;
+          const maxDesktop = 5;
 
           return (
-            <button
+            <div
               key={dateKey}
-              onClick={() => handleDayClick(day)}
               className={`
-                relative flex flex-col items-stretch text-left
-                min-h-[64px] md:min-h-[100px] xl:min-h-[120px] p-1 md:p-1.5 transition-colors
-                ${inMonth ? "bg-card hover:bg-muted/50" : "bg-muted/20 text-muted-foreground/40"}
+                relative flex flex-col text-left group
+                min-h-[80px] md:min-h-[130px] xl:min-h-[150px] p-1 md:p-2 transition-colors
+                ${inMonth ? "bg-card" : "bg-muted/20 text-muted-foreground/40"}
                 ${today ? "ring-2 ring-inset ring-primary" : ""}
               `}
-              aria-label={`${format(day, "EEEE, MMMM d")}${events.length > 0 ? `, ${events.length} events` : ""}`}
             >
-              {/* Day number */}
-              <span
-                className={`text-xs md:text-sm font-medium mb-0.5 self-end md:self-start ${
-                  today
-                    ? "bg-primary text-primary-foreground w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[11px] md:text-sm"
-                    : ""
-                }`}
+              {/* Day header row: number + add button */}
+              <div className="flex items-center justify-between mb-1">
+                <button
+                  onClick={() => handleDayClick(day)}
+                  className={`text-xs md:text-sm font-medium hover:underline ${
+                    today
+                      ? "bg-primary text-primary-foreground w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[11px] md:text-sm"
+                      : ""
+                  }`}
+                >
+                  {format(day, "d")}
+                </button>
+                {inMonth && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAddDate(dateKey);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 h-5 w-5 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-opacity"
+                    aria-label={`Add event on ${format(day, "MMMM d")}`}
+                  >
+                    <Plus className="h-3 w-3 text-primary" />
+                  </button>
+                )}
+              </div>
+
+              {/* Events list — clickable to day detail */}
+              <button
+                onClick={() => handleDayClick(day)}
+                className="flex flex-col gap-0.5 flex-1 overflow-hidden text-left w-full"
               >
-                {format(day, "d")}
-              </span>
+                {/* Mobile: compact view */}
+                <div className="md:hidden">
+                  {events.slice(0, 2).map((ev) => (
+                    <div
+                      key={ev.id}
+                      className={`text-[9px] leading-tight px-1 py-px rounded truncate ${EVENT_COLORS[ev.type]}`}
+                    >
+                      {ev.label}
+                    </div>
+                  ))}
+                  {events.length > 2 && (
+                    <span className="text-[9px] text-muted-foreground px-1">
+                      +{events.length - 2}
+                    </span>
+                  )}
+                </div>
 
-              {/* Events — mobile: dots + count, md+: event labels */}
-              {events.length > 0 && inMonth && (
-                <>
-                  {/* Mobile: compact dots */}
-                  <div className="flex flex-wrap gap-0.5 mt-auto md:hidden">
-                    {events.slice(0, 3).map((ev, i) => (
-                      <div
-                        key={i}
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          ev.type === "shift" ? "bg-sage" : ev.type === "appointment" ? "bg-amber" : "bg-coral"
-                        }`}
-                      />
-                    ))}
-                    {events.length > 3 && (
-                      <span className="text-[9px] text-muted-foreground">+{events.length - 3}</span>
-                    )}
-                  </div>
-
-                  {/* Desktop: event labels */}
-                  <div className="hidden md:flex flex-col gap-0.5 flex-1 overflow-hidden">
-                    {events.slice(0, maxDesktop).map((ev) => (
-                      <div
-                        key={ev.id}
-                        className={`text-[10px] xl:text-[11px] leading-tight px-1 py-0.5 rounded truncate ${EVENT_COLORS[ev.type]}`}
-                      >
-                        <span className="font-medium">{ev.time}</span>{" "}
-                        {ev.label}
-                      </div>
-                    ))}
-                    {events.length > maxDesktop && (
-                      <span className="text-[10px] text-muted-foreground px-1">
-                        +{events.length - maxDesktop} more
-                      </span>
-                    )}
-                  </div>
-                </>
-              )}
-            </button>
+                {/* Desktop: full event labels */}
+                <div className="hidden md:flex flex-col gap-0.5">
+                  {events.slice(0, maxDesktop).map((ev) => (
+                    <div
+                      key={ev.id}
+                      className={`text-[10px] xl:text-xs leading-tight px-1.5 py-0.5 rounded truncate ${EVENT_COLORS[ev.type]}`}
+                    >
+                      <span className="font-semibold">{ev.time}</span>{" "}
+                      {ev.label}
+                    </div>
+                  ))}
+                  {events.length > maxDesktop && (
+                    <span className="text-[10px] text-muted-foreground px-1">
+                      +{events.length - maxDesktop} more
+                    </span>
+                  )}
+                </div>
+              </button>
+            </div>
           );
         })}
       </div>
@@ -248,7 +264,20 @@ export function MonthGrid({ careCircleId }: { careCircleId: string | null }) {
           <div className="h-2 w-2 rounded-full bg-amber" />
           Appointments
         </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="h-2 w-2 rounded-full bg-coral" />
+          Meals
+        </div>
       </div>
+
+      {/* Add event sheet */}
+      <AddEventSheet
+        open={!!addDate}
+        onOpenChange={(open) => !open && setAddDate(null)}
+        date={addDate ?? format(new Date(), "yyyy-MM-dd")}
+        careCircleId={careCircleId}
+        onCreated={loadMonthData}
+      />
     </div>
   );
 }

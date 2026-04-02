@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppointmentDetail } from "@/components/appointments/AppointmentDetail";
+import { AddEventSheet } from "@/components/calendar/AddEventSheet";
 import {
   ArrowLeft,
   Clock,
@@ -17,6 +18,7 @@ import {
   Loader2,
   Phone,
   MapPin,
+  Plus,
   Stethoscope,
   Brain,
   MoreHorizontal,
@@ -92,6 +94,7 @@ export default function DayDetailPage({
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [careCircleId, setCareCircleId] = useState<string | null>(null);
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/circles")
@@ -151,10 +154,14 @@ export default function DayDetailPage({
           <ArrowLeft className="h-5 w-5" />
           <span className="sr-only">Back to calendar</span>
         </Button>
-        <div>
+        <div className="flex-1">
           <h2 className="text-2xl font-bold">{format(date, "EEEE")}</h2>
           <p className="text-muted-foreground text-sm">{format(date, "MMMM d, yyyy")}</p>
         </div>
+        <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Add
+        </Button>
       </div>
 
       {/* Shifts */}
@@ -321,6 +328,15 @@ export default function DayDetailPage({
         appointment={selectedAppt}
         open={!!selectedAppt}
         onOpenChange={(open) => !open && setSelectedAppt(null)}
+      />
+
+      {/* Add event sheet */}
+      <AddEventSheet
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        date={dateStr}
+        careCircleId={careCircleId}
+        onCreated={loadData}
       />
     </div>
   );
