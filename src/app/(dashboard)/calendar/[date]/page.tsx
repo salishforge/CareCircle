@@ -142,9 +142,9 @@ export default function DayDetailPage({
   }
 
   return (
-    <div className="py-6 space-y-6">
+    <div className="py-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mb-6">
         <Button
           variant="ghost"
           size="icon"
@@ -165,6 +165,9 @@ export default function DayDetailPage({
       </div>
 
       {/* Shifts */}
+      {/* Three sections — stacked on mobile, side-by-side on kiosk */}
+      <div className="space-y-6 xl:grid xl:grid-cols-3 xl:gap-6 xl:space-y-0">
+
       <section>
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
           <Clock className="h-4 w-4" />
@@ -322,6 +325,8 @@ export default function DayDetailPage({
           </div>
         )}
       </section>
+
+      </div>{/* end grid */}
 
       {/* Appointment detail sheet */}
       <AppointmentDetail

@@ -56,7 +56,7 @@ export default async function DashboardPage() {
   const alreadyCheckedIn = (myShift?.checkIns?.length ?? 0) > 0;
 
   return (
-    <div className="py-6 xl:py-3 xl:h-full xl:flex xl:flex-col">
+    <div className="py-6 xl:py-3 xl:h-[calc(100vh-1rem)] xl:flex xl:flex-col xl:overflow-hidden">
       <div className="mb-6 xl:mb-3">
         <h2 className="text-2xl xl:text-xl font-bold">
           Hi{firstName ? `, ${firstName}` : ""}
