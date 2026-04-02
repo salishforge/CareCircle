@@ -32,13 +32,20 @@ export async function PUT(request: Request) {
   }
 
   // Hash and store PIN
-  const pinHash = await bcrypt.hash(parsed.data.pin, 10);
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { kioskPin: pinHash },
-  });
-
-  return Response.json({ success: true });
+  try {
+    const pinHash = await bcrypt.hash(parsed.data.pin, 10);
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { kioskPin: pinHash },
+    });
+    return Response.json({ success: true });
+  } catch (err) {
+    console.error("PIN save error:", err);
+    return Response.json(
+      { error: "Failed to save PIN. The database may need a migration: npx prisma migrate dev" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function DELETE() {
