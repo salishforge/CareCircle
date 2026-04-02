@@ -131,20 +131,15 @@ export function KioskLogin({ onSwitchToEmail }: KioskLoginProps) {
                 }}
                 className="flex flex-col items-center gap-3 p-4 md:p-6 rounded-2xl border-2 border-transparent hover:border-primary/30 hover:bg-primary/5 transition-all group"
               >
-                <Avatar className="h-20 w-20 md:h-24 md:h-24 xl:h-28 xl:w-28 ring-4 ring-transparent group-hover:ring-primary/20 transition-all">
+                <Avatar className="h-20 w-20 md:h-24 md:w-24 xl:h-28 xl:w-28 ring-4 ring-transparent group-hover:ring-primary/20 transition-all">
                   <AvatarImage src={user.image ?? undefined} />
-                  <AvatarFallback className="text-2xl md:text-3xl bg-primary/10 text-primary font-bold">
+                  <AvatarFallback className="text-2xl md:text-3xl bg-primary text-primary-foreground font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-semibold text-base md:text-lg">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {ROLE_LABELS[user.role] ?? user.role}
-                  </p>
-                </div>
+                <p className="font-semibold text-base md:text-lg">{user.name}</p>
                 {!user.hasPin && (
-                  <span className="text-[10px] text-muted-foreground/60">No PIN</span>
+                  <span className="text-[10px] text-muted-foreground">Set up PIN in Settings</span>
                 )}
               </button>
             );
