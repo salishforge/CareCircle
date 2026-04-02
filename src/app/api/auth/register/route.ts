@@ -58,13 +58,16 @@ export async function POST(request: Request) {
       orderBy: { createdAt: "asc" },
     });
 
+    // PRIMARY_CAREGIVER automatically gets ADMIN role in the circle
+    const memberRole = role === "PRIMARY_CAREGIVER" ? "ADMIN" : role;
+
     if (existingCircle) {
       // Join existing circle
       await prisma.careCircleMember.create({
         data: {
           careCircleId: existingCircle.id,
           userId: user.id,
-          role: role as "PATIENT" | "PRIMARY_CAREGIVER" | "CAREGIVER" | "MEAL_PROVIDER",
+          role: memberRole as "PATIENT" | "PRIMARY_CAREGIVER" | "CAREGIVER" | "MEAL_PROVIDER" | "ADMIN",
         },
       });
     } else {
@@ -80,7 +83,7 @@ export async function POST(request: Request) {
           members: {
             create: {
               userId: user.id,
-              role: role as "PATIENT" | "PRIMARY_CAREGIVER" | "CAREGIVER" | "MEAL_PROVIDER",
+              role: memberRole as "PATIENT" | "PRIMARY_CAREGIVER" | "CAREGIVER" | "MEAL_PROVIDER" | "ADMIN",
             },
           },
         },

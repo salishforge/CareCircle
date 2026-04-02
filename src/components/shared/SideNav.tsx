@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
   ShoppingCart,
   Settings,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "./NotificationBell";
@@ -40,6 +41,7 @@ const careNav = [
 ];
 
 const adminNav = [
+  { href: "/admin", label: "User Management", icon: Shield },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/nutrition", label: "Nutrition", icon: Salad },
   { href: "/swaps", label: "Shift Swaps", icon: ArrowUpDown },

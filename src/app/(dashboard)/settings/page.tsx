@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignOutButton } from "@/components/shared/SignOutButton";
+import { DeleteAccountButton } from "@/components/settings/DeleteAccountButton";
 import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
 import { ThemeToggle } from "@/components/settings/ThemeToggle";
 import Link from "next/link";
@@ -75,6 +76,19 @@ export default async function SettingsPage() {
       <Card>
         <CardContent className="pt-6">
           <SignOutButton />
+        </CardContent>
+      </Card>
+
+      {/* Danger zone */}
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-3">
+            Permanently delete your account and all associated data. This cannot be undone.
+          </p>
+          <DeleteAccountButton />
         </CardContent>
       </Card>
     </div>
