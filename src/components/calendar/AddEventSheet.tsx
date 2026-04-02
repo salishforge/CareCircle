@@ -1,13 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Clock, UtensilsCrossed, CalendarDays } from "lucide-react";
+// X is imported above with Card
 import { format } from "date-fns";
 
 type EventType = "shift" | "appointment" | "meal";
@@ -148,16 +145,24 @@ export function AddEventSheet({
     }
   }
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>
-            Add to {format(new Date(date + "T12:00:00"), "EEEE, MMM d")}
-          </SheetTitle>
-        </SheetHeader>
+  if (!open) return null;
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+  return (
+    <Card className="mt-4 mx-auto w-[95%] border-primary/20 shadow-lg animate-in slide-in-from-top-2 duration-200">
+      <CardHeader className="pb-3 flex flex-row items-center justify-between">
+        <CardTitle className="text-base">
+          Add to {format(new Date(date + "T12:00:00"), "EEEE, MMM d")}
+        </CardTitle>
+        <button
+          onClick={() => onOpenChange(false)}
+          className="h-7 w-7 rounded-full hover:bg-muted flex items-center justify-center"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Event type selector */}
           <div className="flex gap-2">
             {EVENT_TYPES.map(({ value, label, icon: Icon }) => (
@@ -376,7 +381,7 @@ export function AddEventSheet({
             )}
           </Button>
         </form>
-      </SheetContent>
-    </Sheet>
+      </CardContent>
+    </Card>
   );
 }
