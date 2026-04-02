@@ -73,11 +73,11 @@ export default function AdminPage() {
   const loadMembers = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/users");
-      if (res.status === 403) {
+      if (!res.ok) {
         setLoading(false);
         return;
       }
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (Array.isArray(data)) {
         setMembers(data);
       }
