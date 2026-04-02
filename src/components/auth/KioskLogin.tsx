@@ -23,7 +23,11 @@ const ROLE_LABELS: Record<string, string> = {
   PATIENT: "Patient",
 };
 
-export function KioskLogin() {
+interface KioskLoginProps {
+  onSwitchToEmail?: () => void;
+}
+
+export function KioskLogin({ onSwitchToEmail }: KioskLoginProps) {
   const router = useRouter();
   const [users, setUsers] = useState<KioskUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<KioskUser | null>(null);
@@ -94,6 +98,18 @@ export function KioskLogin() {
           Tap your name to sign in
         </p>
 
+        {users.length === 0 && (
+          <div className="mb-8">
+            <p className="text-muted-foreground mb-4">No users found. Sign in with email to get started.</p>
+            <button
+              onClick={onSwitchToEmail}
+              className="text-primary font-semibold hover:underline text-lg"
+            >
+              Sign in with email →
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 max-w-3xl mx-auto">
           {users.map((user) => {
             const initials = user.name
@@ -140,9 +156,9 @@ export function KioskLogin() {
         )}
 
         <p className="mt-8 text-sm text-muted-foreground">
-          <a href="/login" className="text-primary hover:underline">
+          <button onClick={onSwitchToEmail} className="text-primary hover:underline">
             Use email &amp; password instead
-          </a>
+          </button>
         </p>
       </div>
     );
@@ -234,9 +250,9 @@ export function KioskLogin() {
       </div>
 
       <p className="mt-6 text-xs text-muted-foreground">
-        <a href="/login" className="text-primary hover:underline">
+        <button onClick={onSwitchToEmail} className="text-primary hover:underline">
           Use email &amp; password instead
-        </a>
+        </button>
       </p>
     </div>
   );
