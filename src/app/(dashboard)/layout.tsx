@@ -19,12 +19,12 @@ export default async function DashboardLayout({
   if (!session?.user) redirect("/login");
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen xl:h-screen xl:overflow-hidden">
       {/* Sidebar — hidden on mobile, visible on md+ */}
       <SideNav />
 
       {/* Main area */}
-      <div className="flex flex-col flex-1 min-h-screen">
+      <div className="flex flex-col flex-1 min-h-screen xl:h-screen xl:overflow-hidden">
         {/* Emergency banner */}
         <EmergencyBanner />
 
@@ -47,8 +47,8 @@ export default async function DashboardLayout({
           </div>
         </header>
 
-        {/* Main content — responsive width */}
-        <main className="flex-1 pb-20 md:pb-6 px-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] max-w-lg md:max-w-3xl xl:max-w-7xl mx-auto w-full">
+        {/* Main content — responsive width, kiosk mode has no scroll */}
+        <main className="flex-1 pb-20 md:pb-6 px-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] max-w-lg md:max-w-3xl xl:max-w-full mx-auto w-full xl:overflow-hidden">
           <PullToRefresh>
             {children}
           </PullToRefresh>

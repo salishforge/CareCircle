@@ -158,8 +158,8 @@ export function WidgetGrid({ widgets }: WidgetGridProps) {
         </div>
       )}
 
-      {/* Widget grid — responsive columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {/* Widget grid — responsive columns, kiosk mode fits viewport */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 xl:gap-2 xl:auto-rows-fr xl:max-h-[calc(100vh-7rem)] xl:overflow-hidden">
         {visibleWidgets.map((widget) => (
           <div
             key={widget.id}

@@ -56,9 +56,9 @@ export default async function DashboardPage() {
   const alreadyCheckedIn = (myShift?.checkIns?.length ?? 0) > 0;
 
   return (
-    <div className="py-6">
-      <div className="mb-6">
-        <h2 className="text-2xl xl:text-3xl font-bold">
+    <div className="py-6 xl:py-3 xl:h-full xl:flex xl:flex-col">
+      <div className="mb-6 xl:mb-3">
+        <h2 className="text-2xl xl:text-xl font-bold">
           Hi{firstName ? `, ${firstName}` : ""}
         </h2>
         <p className="text-muted-foreground text-sm xl:text-base mt-1">
@@ -86,8 +86,8 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Desktop/Smart Board layout — widget grid */}
-      <div className="hidden xl:block">
+      {/* Desktop/Smart Board layout — widget grid, fills viewport on kiosk */}
+      <div className="hidden xl:block xl:flex-1 xl:min-h-0">
         <HomeDashboard
           careCircleId={circleId}
           currentCaregiver={currentCaregiver}

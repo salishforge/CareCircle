@@ -56,7 +56,7 @@ export function DashboardWidget({
           </Button>
         )}
       </CardHeader>
-      {!collapsed && <CardContent className="pt-0">{children}</CardContent>}
+      {!collapsed && <CardContent className="pt-0 xl:overflow-y-auto xl:max-h-[calc(100vh/3-4rem)]">{children}</CardContent>}
     </Card>
   );
 }
