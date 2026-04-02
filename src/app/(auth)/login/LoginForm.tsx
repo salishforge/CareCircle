@@ -54,6 +54,7 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoFocus
               autoComplete="email"
               className="h-12"
             />

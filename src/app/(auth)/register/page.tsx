@@ -134,6 +134,7 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={(e) => updateField("email", e.target.value)}
                 required
+                autoFocus
                 autoComplete="email"
                 className="h-12"
               />
@@ -181,6 +182,7 @@ export default function RegisterPage() {
                 value={formData.name}
                 onChange={(e) => updateField("name", e.target.value)}
                 required
+                autoFocus
                 autoComplete="name"
                 className="h-12"
               />
