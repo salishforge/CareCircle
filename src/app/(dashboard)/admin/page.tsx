@@ -14,12 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+// Inline card form instead of Sheet
 import {
   Shield,
   UserPlus,
@@ -83,9 +78,11 @@ export default function AdminPage() {
         return;
       }
       const data = await res.json();
-      if (Array.isArray(data)) setMembers(data);
-    } catch {
-      // ignore
+      if (Array.isArray(data)) {
+        setMembers(data);
+      }
+    } catch (err) {
+      console.error("Failed to load members:", err);
     } finally {
       setLoading(false);
     }
@@ -300,85 +297,98 @@ export default function AdminPage() {
         </Card>
       )}
 
-      {/* Add member sheet */}
-      <Sheet open={addOpen} onOpenChange={setAddOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
+      {/* Add member — inline card matching member list width */}
+      {addOpen && (
+        <Card className="border-primary/20 shadow-lg animate-in slide-in-from-top-2 duration-200">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-primary" />
               Add Member
-            </SheetTitle>
-          </SheetHeader>
-          <form onSubmit={handleAddMember} className="space-y-3 mt-4">
-            <div>
-              <Label htmlFor="add-email">Email <span className="text-destructive">*</span></Label>
-              <Input
-                id="add-email"
-                type="email"
-                placeholder="member@example.com"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                required
-                autoFocus
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="add-name">Full Name <span className="text-destructive">*</span></Label>
-              <Input
-                id="add-name"
-                placeholder="Jane Doe"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                required
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="add-password">Password <span className="text-destructive">*</span></Label>
-              <Input
-                id="add-password"
-                type="password"
-                placeholder="Min 8 characters"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={8}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="add-phone">Phone</Label>
-              <Input
-                id="add-phone"
-                type="tel"
-                placeholder="(555) 123-4567"
-                value={newPhone}
-                onChange={(e) => setNewPhone(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="add-role">Role</Label>
-              <Select value={newRole} onValueChange={(v) => v && setNewRole(v)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="PRIMARY_CAREGIVER">Primary Caregiver</SelectItem>
-                  <SelectItem value="CAREGIVER">Caregiver</SelectItem>
-                  <SelectItem value="MEAL_PROVIDER">Meal Provider</SelectItem>
-                  <SelectItem value="PATIENT">Patient</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Member"}
-            </Button>
-          </form>
-        </SheetContent>
-      </Sheet>
+            </CardTitle>
+            <button
+              onClick={() => setAddOpen(false)}
+              className="h-7 w-7 rounded-full hover:bg-muted flex items-center justify-center"
+              aria-label="Close"
+            >
+              <UserX className="h-4 w-4" />
+            </button>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAddMember} className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="add-email">Email <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="add-email"
+                    type="email"
+                    placeholder="member@example.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    required
+                    autoFocus
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="add-name">Full Name <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="add-name"
+                    placeholder="Jane Doe"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    required
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <Label htmlFor="add-password">Password <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="add-password"
+                    type="password"
+                    placeholder="Min 8 characters"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="add-phone">Phone</Label>
+                  <Input
+                    id="add-phone"
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="add-role">Role</Label>
+                  <Select value={newRole} onValueChange={(v) => v && setNewRole(v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="PRIMARY_CAREGIVER">Primary Caregiver</SelectItem>
+                      <SelectItem value="CAREGIVER">Caregiver</SelectItem>
+                      <SelectItem value="MEAL_PROVIDER">Meal Provider</SelectItem>
+                      <SelectItem value="PATIENT">Patient</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Member"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

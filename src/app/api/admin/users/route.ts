@@ -38,18 +38,7 @@ export async function GET(request: Request) {
   const members = await prisma.careCircleMember.findMany({
     where: { careCircleId: membership.careCircleId },
     include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          image: true,
-          role: true,
-          isLocked: true,
-          createdAt: true,
-        },
-      },
+      user: true,
     },
     orderBy: { joinedAt: "asc" },
   });
@@ -65,7 +54,7 @@ export async function GET(request: Request) {
       userRole: m.user.role,
       circleRole: m.role,
       isActive: m.isActive,
-      isLocked: m.user.isLocked,
+      isLocked: (m.user as Record<string, unknown>).isLocked ?? false,
       joinedAt: m.joinedAt,
       createdAt: m.user.createdAt,
     }))
