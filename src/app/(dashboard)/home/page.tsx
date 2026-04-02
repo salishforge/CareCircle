@@ -62,6 +62,7 @@ export default async function DashboardPage() {
       careCircleId={circleId}
       firstName={firstName}
       isAdmin={isAdmin ?? false}
+      userRole={membership?.role ?? "CAREGIVER"}
       mealsPlanned={mealCounts.planned}
       mealsDelivered={mealCounts.delivered}
       pendingRequests={pendingRequests}
