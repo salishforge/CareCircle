@@ -241,6 +241,7 @@ model User {
   authProvider            AuthProvider @default(LOCAL)
   notificationPreferences Json      @default("{\"email\":true,\"sms\":true,\"push\":true,\"quietHoursStart\":null,\"quietHoursEnd\":null}")
   isLocked                Boolean   @default(false)
+  kioskPin                String?   // bcrypt hash of 4-digit PIN for kiosk login
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 

@@ -17,7 +17,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    // Standard email + password login
     CredentialsProvider({
+      id: "credentials",
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -36,6 +38,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const isValid = await bcrypt.compare(
           credentials.password as string,
           user.passwordHash
+        );
+
+        if (!isValid) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      },
+    }),
+    // Kiosk PIN login — avatar tap + 4-digit PIN
+    CredentialsProvider({
+      id: "kiosk-pin",
+      name: "kiosk-pin",
+      credentials: {
+        userId: { label: "User ID", type: "text" },
+        pin: { label: "PIN", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.userId || !credentials?.pin) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { id: credentials.userId as string },
+        });
+
+        if (!user) return null;
+        if (user.isLocked) return null;
+        if (!(user as Record<string, unknown>).kioskPin) return null;
+
+        const isValid = await bcrypt.compare(
+          credentials.pin as string,
+          (user as Record<string, unknown>).kioskPin as string
         );
 
         if (!isValid) return null;

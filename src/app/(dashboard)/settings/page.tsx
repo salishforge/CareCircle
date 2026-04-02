@@ -4,6 +4,7 @@ import { SignOutButton } from "@/components/shared/SignOutButton";
 import { DeleteAccountButton } from "@/components/settings/DeleteAccountButton";
 import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
 import { ThemeToggle } from "@/components/settings/ThemeToggle";
+import { KioskPinSetup } from "@/components/settings/KioskPinSetup";
 import Link from "next/link";
 import {
   Salad,
@@ -38,6 +39,8 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <KioskPinSetup />
 
       <ThemeToggle />
 
