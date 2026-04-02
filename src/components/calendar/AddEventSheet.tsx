@@ -44,6 +44,7 @@ export function AddEventSheet({
 }: AddEventSheetProps) {
   const [eventType, setEventType] = useState<EventType>("shift");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   // Shift fields
   const [shiftStart, setShiftStart] = useState("08:00");
@@ -86,60 +87,67 @@ export function AddEventSheet({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!careCircleId) return;
+    if (!careCircleId) {
+      setError("No care circle found. Please join or create one first.");
+      return;
+    }
     setSaving(true);
+    setError("");
 
     try {
-      let res: Response;
+      let url: string;
+      let body: Record<string, unknown>;
 
       if (eventType === "shift") {
-        res = await fetch("/api/shifts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            careCircleId,
-            date,
-            startTime: `${date}T${shiftStart}:00`,
-            endTime: `${date}T${shiftEnd}:00`,
-            notes: shiftNotes || undefined,
-          }),
-        });
+        url = "/api/shifts";
+        body = {
+          careCircleId,
+          date,
+          startTime: `${date}T${shiftStart}:00`,
+          endTime: `${date}T${shiftEnd}:00`,
+          notes: shiftNotes || undefined,
+        };
       } else if (eventType === "appointment") {
-        res = await fetch("/api/appointments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            careCircleId,
-            title: apptTitle,
-            dateTime: `${date}T${apptTime}:00`,
-            duration: parseInt(apptDuration),
-            type: apptType,
-            location: apptLocation || undefined,
-            transportationNeeded: apptTransport,
-            notes: apptNotes || undefined,
-          }),
-        });
+        url = "/api/appointments";
+        body = {
+          careCircleId,
+          title: apptTitle,
+          dateTime: `${date}T${apptTime}:00`,
+          duration: parseInt(apptDuration),
+          type: apptType,
+          location: apptLocation || undefined,
+          transportationNeeded: apptTransport,
+          notes: apptNotes || undefined,
+        };
       } else {
-        res = await fetch("/api/meals", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            careCircleId,
-            date,
-            mealType,
-            title: mealTitle,
-            calories: mealCalories ? parseInt(mealCalories) : undefined,
-            proteinGrams: mealProtein ? parseInt(mealProtein) : undefined,
-            specialNotes: mealNotes || undefined,
-          }),
-        });
+        url = "/api/meals";
+        body = {
+          careCircleId,
+          date,
+          mealType,
+          title: mealTitle,
+          calories: mealCalories ? parseInt(mealCalories) : undefined,
+          proteinGrams: mealProtein ? parseInt(mealProtein) : undefined,
+          specialNotes: mealNotes || undefined,
+        };
       }
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
       if (res.ok) {
         resetForm();
         onOpenChange(false);
         onCreated();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to create. Please try again.");
       }
+    } catch {
+      setError("Network error. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -371,6 +379,10 @@ export function AddEventSheet({
                 />
               </div>
             </div>
+          )}
+
+          {error && (
+            <p className="text-sm text-destructive text-center" role="alert">{error}</p>
           )}
 
           <Button type="submit" className="w-full" disabled={saving}>
