@@ -178,7 +178,7 @@ export function MonthGrid({ careCircleId }: { careCircleId: string | null }) {
               key={dateKey}
               className={`
                 relative flex flex-col text-left group
-                min-h-[80px] md:min-h-[130px] xl:min-h-[150px] p-1 md:p-2 transition-colors
+                min-h-[56px] md:min-h-[90px] xl:min-h-[105px] p-1 md:p-1.5 transition-colors
                 ${inMonth ? "bg-card" : "bg-muted/20 text-muted-foreground/40"}
                 ${today ? "ring-2 ring-inset ring-primary" : ""}
               `}
